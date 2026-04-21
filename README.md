@@ -42,7 +42,7 @@ The project follows the **MVVM** (Model-View-ViewModel) pattern:
 ### Run
 
 ```bash
-git clone https://github.com/TEU_USERNAME/jarvis.git
+git clone https://github.com/Karabodjan/jarvis.git
 cd jarvis
 ./mvnw javafx:run
 ```
