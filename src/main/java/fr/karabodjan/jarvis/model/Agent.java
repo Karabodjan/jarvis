@@ -1,6 +1,7 @@
 package fr.karabodjan.jarvis.model;
 
 import java.time.Instant;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Agent {
 
@@ -12,8 +13,12 @@ public class Agent {
 
     private String status;
 
-    public Agent(String id, String name, String repoUrl, String taskType){
-        this.id= id;
+    public Agent(
+            @JsonProperty("id") String id,
+            @JsonProperty("name") String name,
+            @JsonProperty("repoUrl") String repoUrl,
+            @JsonProperty("taskType") String taskType) {
+        this.id = id;
         this.name = name;
         this.repoUrl = repoUrl;
         this.taskType = taskType;
