@@ -2,15 +2,29 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.VBox?>
 
-<?import javafx.scene.control.Button?>
-<VBox alignment="CENTER" spacing="20.0" xmlns:fx="http://javafx.com/fxml"
-      fx:controller="fr.karabodjan.jarvis.MainController">
-    <padding>
-        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
-    </padding>
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="fr.karabodjan.jarvis.view.MainController"
+            prefWidth="1000" prefHeight="650">
 
-    <Label fx:id="welcomeText"/>
-    <Button text="Hello!" onAction="#onHelloButtonClick"/>
-</VBox>
+    <left>
+        <VBox spacing="10" style="-fx-background-color: #2b2b2b;" prefWidth="250">
+            <padding>
+                <Insets top="15" right="10" bottom="15" left="10"/>
+            </padding>
+            <Label text="Agents" style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;"/>
+            <ListView fx:id="agentListView" VBox.vgrow="ALWAYS"/>
+        </VBox>
+    </left>
+
+    <center>
+        <VBox alignment="CENTER" spacing="10">
+            <Label text="J.A.R.V.I.S." style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
+            <Label text="Select an agent to begin" style="-fx-text-fill: gray;"/>
+        </VBox>
+    </center>
+
+</BorderPane>
