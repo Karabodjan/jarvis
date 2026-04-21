@@ -1,0 +1,22 @@
+{
+  "agents": [
+    {
+      "id": "a1",
+      "name": "BugFixer Alpha",
+      "repoUrl": "https://github.com/Karabodjan/jarvis-test-repo-1",
+      "taskType": "bug_fix"
+    },
+    {
+      "id": "a2",
+      "name": "Refactor Bot",
+      "repoUrl": "https://github.com/Karabodjan/jarvis-test-repo-2",
+      "taskType": "refactor"
+    },
+    {
+      "id": "a3",
+      "name": "Doc Generator",
+      "repoUrl": "https://github.com/Karabodjan/jarvis-test-repo-3",
+      "taskType": "documentation"
+    }
+  ]
+}
