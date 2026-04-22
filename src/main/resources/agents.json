@@ -2,7 +2,7 @@
   "agents": [
     {
       "id": "a1",
-      "name": "BugFixer Alpha",
+      "name": "BugFixer",
       "repoUrl": "https://github.com/Karabodjan/jarvis-test-repo-1",
       "taskType": "bug_fix"
     },
