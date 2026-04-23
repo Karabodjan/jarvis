@@ -21,9 +21,42 @@
     </left>
 
     <center>
-        <VBox alignment="CENTER" spacing="10">
-            <Label text="J.A.R.V.I.S." style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
-            <Label text="Select an agent to begin" style="-fx-text-fill: gray;"/>
+        <VBox spacing="15" alignment="TOP_LEFT">
+            <padding>
+                <Insets top="30" right="30" bottom="30" left="30"/>
+            </padding>
+
+            <Label fx:id="detailTitleLabel" text="Select an agent"
+                   style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
+
+            <Label fx:id="detailPlaceholderLabel" text="Pick an agent from the sidebar to see details."
+                   style="-fx-text-fill: gray;"/>
+
+            <VBox fx:id="detailFieldsBox" spacing="8" visible="false" managed="false">
+                <Label text="Repository" style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
+                <Label fx:id="detailRepoLabel" text=""/>
+
+                <Label text="Task Type" style="-fx-font-weight: bold; -fx-text-fill: #555;">
+                    <VBox.margin>
+                        <Insets top="10"/>
+                    </VBox.margin>
+                </Label>
+                <Label fx:id="detailTaskTypeLabel" text=""/>
+
+                <Label text="Status" style="-fx-font-weight: bold; -fx-text-fill: #555;">
+                    <VBox.margin>
+                        <Insets top="10"/>
+                    </VBox.margin>
+                </Label>
+                <Label fx:id="detailStatusLabel" text=""/>
+
+                <Label text="Created At" style="-fx-font-weight: bold; -fx-text-fill: #555;">
+                    <VBox.margin>
+                        <Insets top="10"/>
+                    </VBox.margin>
+                </Label>
+                <Label fx:id="detailCreatedAtLabel" text=""/>
+            </VBox>
         </VBox>
     </center>
 
