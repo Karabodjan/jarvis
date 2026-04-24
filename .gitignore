@@ -44,3 +44,20 @@ Thumbs.db
 config.json
 jarvis.db
 /data/
+exports/
+*.csv
+!agents.sample.csv
+hs_err_pid*.log
+replay_pid*.log
+
+### Environment & Secrets ###
+.env
+.env.local
+*.key
+*.pem
+secrets/
+
+### Maven ###
+dependency-reduced-pom.xml
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.properties
