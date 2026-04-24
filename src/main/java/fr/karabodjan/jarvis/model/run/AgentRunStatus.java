@@ -15,5 +15,9 @@ public enum AgentRunStatus {
     FAILED,
 
     /** Run was deliberately cancelled by the user before completion. */
-    CANCELLED
+    CANCELLED;
+
+    public boolean isTerminal() {
+        return this == COMPLETED || this == FAILED || this == CANCELLED;
+    }
 }
