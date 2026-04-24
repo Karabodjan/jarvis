@@ -78,7 +78,7 @@ public class MainController implements Initializable {
 
         detailRepoLabel.setText(agent.getRepoUrl());
         detailTaskTypeLabel.setText(agent.getTaskType());
-        detailStatusLabel.setText(agent.getStatus());
+        detailStatusLabel.setText("IDLE"); // TODO Phase 3: bind to AgentViewModel run status
         detailCreatedAtLabel.setText(CREATED_AT_FORMAT.format(agent.getCreatedAt()));
     }
 

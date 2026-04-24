@@ -3,15 +3,18 @@ package fr.karabodjan.jarvis.model;
 import java.time.Instant;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class Agent {
+/**
+ * Immutable definition of an agent loaded from agents.json.
+ * Represents the static configuration of an agent — never its runtime state.
+ * Runtime status (IDLE, RUNNING, COMPLETED, ...) is managed by the ViewModel.
+ */
+public final class Agent {
 
     private final String id;
     private final String name;
     private final String repoUrl;
     private final String taskType;
     private final Instant createdAt;
-
-    private String status;
 
     public Agent(
             @JsonProperty("id") String id,
@@ -23,7 +26,6 @@ public class Agent {
         this.repoUrl = repoUrl;
         this.taskType = taskType;
         this.createdAt = Instant.now();
-        this.status = "IDLE";
     }
 
     public String getId() {
@@ -46,20 +48,12 @@ public class Agent {
         return createdAt;
     }
 
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
     @Override
     public String toString() {
         return "Agent{" +
                 "id='" + id + '\'' +
                 ", name='" + name + '\'' +
-                ", status='" + status + '\'' +
+                ", taskType='" + taskType + '\'' +
                 '}';
     }
 }
