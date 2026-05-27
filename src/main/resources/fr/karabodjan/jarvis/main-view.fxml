@@ -11,7 +11,8 @@
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="fr.karabodjan.jarvis.view.MainController"
-            prefWidth="1000" prefHeight="650">
+            prefWidth="1000" prefHeight="650"
+            stylesheets="@style.css">
 
     <left>
         <VBox spacing="10" style="-fx-background-color: #2b2b2b;" prefWidth="250">
@@ -51,7 +52,7 @@
                         <Insets top="10"/>
                     </VBox.margin>
                 </Label>
-                <Label fx:id="detailStatusLabel" text=""/>
+                <Label fx:id="detailStatusLabel" text="" styleClass="status-label"/>
 
                 <Label text="Created At" style="-fx-font-weight: bold; -fx-text-fill: #555;">
                     <VBox.margin>

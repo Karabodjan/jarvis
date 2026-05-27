@@ -4,25 +4,40 @@ import fr.karabodjan.jarvis.model.run.AgentRunStatus;
 import fr.karabodjan.jarvis.viewmodel.AgentListViewModel;
 import fr.karabodjan.jarvis.viewmodel.AgentRunViewModel;
 import javafx.beans.value.ChangeListener;
+import javafx.css.PseudoClass;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.EnumMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
-
 
 public class MainController {
 
     private static final DateTimeFormatter CREATED_AT_FORMAT =
             DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm", Locale.ENGLISH)
                     .withZone(ZoneId.systemDefault());
+
+    private static final Map<AgentRunStatus, PseudoClass> PSEUDO_BY_STATUS = buildPseudoMap();
+
+    private static Map<AgentRunStatus, PseudoClass> buildPseudoMap() {
+        EnumMap<AgentRunStatus, PseudoClass> map = new EnumMap<>(AgentRunStatus.class);
+        for (AgentRunStatus s : AgentRunStatus.values()) {
+            map.put(s, PseudoClass.getPseudoClass(s.name().toLowerCase(Locale.ROOT)));
+        }
+        return map;
+    }
 
     @FXML private ListView<AgentRunViewModel> agentListView;
 
@@ -42,7 +57,10 @@ public class MainController {
     private AgentRunViewModel boundRun;
 
     private final ChangeListener<AgentRunStatus> statusListener =
-            (obs, oldStatus, newStatus) -> refreshLaunchButton(newStatus);
+            (obs, oldStatus, newStatus) -> {
+                applyStatusPseudoClass(detailStatusLabel, newStatus);
+                refreshLaunchButton(newStatus);
+            };
 
     public void setViewModel(AgentListViewModel listViewModel) {
         this.listViewModel = Objects.requireNonNull(listViewModel, "listViewModel must not be null");
@@ -52,27 +70,18 @@ public class MainController {
         Objects.requireNonNull(listViewModel, "setViewModel must be called before init");
 
         agentListView.setItems(listViewModel.getAgents());
-
-        agentListView.setCellFactory(listView -> new ListCell<>() {
-            @Override
-            protected void updateItem(AgentRunViewModel runVm, boolean empty) {
-                super.updateItem(runVm, empty);
-                setText(empty || runVm == null ? null : runVm.getAgent().getName());
-            }
-        });
+        agentListView.setCellFactory(listView -> new AgentRunCell());
 
         agentListView.getSelectionModel().selectedItemProperty().addListener(
                 (observable, oldRun, newRun) -> bindToRun(newRun)
         );
 
-        // Initial state: nothing selected.
         bindToRun(null);
     }
 
     // --- selection-driven binding --------------------------------------
 
     private void bindToRun(AgentRunViewModel runVm) {
-        // Unbind the previously bound run, if any.
         if (boundRun != null) {
             detailMessageLabel.textProperty().unbind();
             detailProgressBar.progressProperty().unbind();
@@ -81,7 +90,6 @@ public class MainController {
             boundRun = null;
         }
 
-        // Empty selection → show placeholder, hide details.
         if (runVm == null) {
             detailTitleLabel.setText("Select an agent");
             detailPlaceholderLabel.setVisible(true);
@@ -91,7 +99,6 @@ public class MainController {
             return;
         }
 
-        // Populate static fields (from immutable Agent).
         var agent = runVm.getAgent();
         detailTitleLabel.setText(agent.getName());
         detailPlaceholderLabel.setVisible(false);
@@ -103,21 +110,27 @@ public class MainController {
         detailTaskTypeLabel.setText(agent.getTaskType());
         detailCreatedAtLabel.setText(CREATED_AT_FORMAT.format(agent.getCreatedAt()));
 
-        // Bind reactive fields to the run view model's properties.
         detailMessageLabel.textProperty().bind(runVm.messageProperty());
         detailProgressBar.progressProperty().bind(runVm.progressProperty());
         detailStatusLabel.textProperty().bind(runVm.statusProperty().asString());
 
-        // Track the bound run and listen to status changes for the launch button.
         boundRun = runVm;
         runVm.statusProperty().addListener(statusListener);
+
+        // Apply visuals for current state immediately.
+        applyStatusPseudoClass(detailStatusLabel, runVm.getStatus());
         refreshLaunchButton(runVm.getStatus());
     }
 
     private void refreshLaunchButton(AgentRunStatus status) {
-        // Disable Launch while RUNNING. Other states (IDLE/COMPLETED/FAILED/CANCELLED)
-        // allow re-launching.
         launchButton.setDisable(status == AgentRunStatus.RUNNING);
+    }
+
+
+    private static void applyStatusPseudoClass(Node node, AgentRunStatus status) {
+        for (Map.Entry<AgentRunStatus, PseudoClass> entry : PSEUDO_BY_STATUS.entrySet()) {
+            node.pseudoClassStateChanged(entry.getValue(), entry.getKey() == status);
+        }
     }
 
     // --- FXML handlers --------------------------------------------------
@@ -125,8 +138,54 @@ public class MainController {
     @FXML
     private void onLaunchClicked() {
         if (boundRun == null) {
-            return;  // no selection; button shouldn't even be clickable
+            return;
         }
         listViewModel.launch(boundRun);
+    }
+
+    // --- Sidebar cell with status dot ----------------------------------
+
+
+    private static final class AgentRunCell extends ListCell<AgentRunViewModel> {
+
+        private final Label dot = new Label("●");
+        private final Label name = new Label();
+        private final HBox layout = new HBox(dot, name);
+
+        /** Currently observed run vm — needed to detach the listener on recycling. */
+        private AgentRunViewModel observed;
+
+        private final ChangeListener<AgentRunStatus> dotListener =
+                (obs, oldStatus, newStatus) -> applyStatusPseudoClass(dot, newStatus);
+
+        AgentRunCell() {
+            dot.getStyleClass().add("status-dot");
+            layout.setAlignment(Pos.CENTER_LEFT);
+        }
+
+        @Override
+        protected void updateItem(AgentRunViewModel runVm, boolean empty) {
+            super.updateItem(runVm, empty);
+
+            // Detach from any previous run (cells are recycled by ListView).
+            if (observed != null) {
+                observed.statusProperty().removeListener(dotListener);
+                observed = null;
+            }
+
+            if (empty || runVm == null) {
+                setText(null);
+                setGraphic(null);
+                return;
+            }
+
+            name.setText(runVm.getAgent().getName());
+            applyStatusPseudoClass(dot, runVm.getStatus());
+            runVm.statusProperty().addListener(dotListener);
+            observed = runVm;
+
+            setText(null);
+            setGraphic(layout);
+        }
     }
 }
