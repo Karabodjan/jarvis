@@ -36,6 +36,10 @@ public final class AgentListViewModel {
         }
     }
 
+    public ObservableList<AgentRunViewModel> getAgents() {
+        return agents;
+    }
+
     public void launch(AgentRunViewModel runVm) {
         Objects.requireNonNull(runVm, "runVm must not be null");
         if (runVm.isRunning()) {

@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
@@ -56,6 +59,29 @@
                     </VBox.margin>
                 </Label>
                 <Label fx:id="detailCreatedAtLabel" text=""/>
+
+                <Label text="Message" style="-fx-font-weight: bold; -fx-text-fill: #555;">
+                    <VBox.margin>
+                        <Insets top="10"/>
+                    </VBox.margin>
+                </Label>
+                <Label fx:id="detailMessageLabel" text="" wrapText="true"/>
+
+                <Label text="Progress" style="-fx-font-weight: bold; -fx-text-fill: #555;">
+                    <VBox.margin>
+                        <Insets top="10"/>
+                    </VBox.margin>
+                </Label>
+                <ProgressBar fx:id="detailProgressBar" progress="0.0" prefWidth="400"/>
+
+                <HBox spacing="10">
+                    <VBox.margin>
+                        <Insets top="20"/>
+                    </VBox.margin>
+                    <Button fx:id="launchButton" text="Launch Agent"
+                            onAction="#onLaunchClicked"
+                            style="-fx-font-size: 14px; -fx-padding: 8 20 8 20;"/>
+                </HBox>
             </VBox>
         </VBox>
     </center>
