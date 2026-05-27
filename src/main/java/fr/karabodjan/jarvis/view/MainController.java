@@ -51,6 +51,7 @@ public class MainController {
     @FXML private Label detailMessageLabel;
     @FXML private ProgressBar detailProgressBar;
     @FXML private Button launchButton;
+    @FXML private Button cancelButton;
 
     private AgentListViewModel listViewModel;
 
@@ -59,7 +60,7 @@ public class MainController {
     private final ChangeListener<AgentRunStatus> statusListener =
             (obs, oldStatus, newStatus) -> {
                 applyStatusPseudoClass(detailStatusLabel, newStatus);
-                refreshLaunchButton(newStatus);
+                refreshActionButtons(newStatus);
             };
 
     public void setViewModel(AgentListViewModel listViewModel) {
@@ -119,11 +120,19 @@ public class MainController {
 
         // Apply visuals for current state immediately.
         applyStatusPseudoClass(detailStatusLabel, runVm.getStatus());
-        refreshLaunchButton(runVm.getStatus());
+        refreshActionButtons(runVm.getStatus());
     }
 
-    private void refreshLaunchButton(AgentRunStatus status) {
-        launchButton.setDisable(status == AgentRunStatus.RUNNING);
+    private void refreshActionButtons(AgentRunStatus status) {
+        boolean running = (status == AgentRunStatus.RUNNING);
+
+        // Launch is disabled while running, enabled otherwise (allows re-launch
+        // after a terminal state).
+        launchButton.setDisable(running);
+
+        // Cancel is only visible while running — it has no meaning in other states.
+        cancelButton.setVisible(running);
+        cancelButton.setManaged(running);
     }
 
 
@@ -141,6 +150,14 @@ public class MainController {
             return;
         }
         listViewModel.launch(boundRun);
+    }
+
+    @FXML
+    private void onCancelClicked() {
+        if (boundRun == null) {
+            return;
+        }
+        listViewModel.cancel(boundRun);
     }
 
     // --- Sidebar cell with status dot ----------------------------------

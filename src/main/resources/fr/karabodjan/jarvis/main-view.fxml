@@ -82,6 +82,10 @@
                     <Button fx:id="launchButton" text="Launch Agent"
                             onAction="#onLaunchClicked"
                             style="-fx-font-size: 14px; -fx-padding: 8 20 8 20;"/>
+                    <Button fx:id="cancelButton" text="Cancel"
+                            onAction="#onCancelClicked"
+                            visible="false" managed="false"
+                            styleClass="cancel-button"/>
                 </HBox>
             </VBox>
         </VBox>
