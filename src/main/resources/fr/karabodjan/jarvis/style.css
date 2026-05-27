@@ -26,3 +26,61 @@
 .status-dot:completed { -fx-text-fill: #27ae60; }
 .status-dot:failed    { -fx-text-fill: #c0392b; }
 .status-dot:cancelled { -fx-text-fill: #7f8c8d; }
+
+/* ---------- Cancel button ------------------------------------ */
+
+.cancel-button {
+    -fx-font-size: 14px;
+    -fx-padding: 8 20 8 20;
+    -fx-text-fill: #c0392b;
+    -fx-background-color: #ecf0f1;
+    -fx-border-color: #bdc3c7;
+    -fx-border-width: 1;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+}
+
+.cancel-button:hover {
+    -fx-background-color: #dfe4e6;
+}
+
+.cancel-button:pressed {
+    -fx-background-color: #ced4d6;
+}
+
+/* ---------- Log console (bottom panel) ----------------------- */
+
+.log-console {
+    -fx-background-color: #1e1e1e;
+    -fx-border-color: #3c3c3c;
+    -fx-border-width: 1 0 0 0;  /* top border only — separates from main area */
+}
+
+.log-title {
+    -fx-text-fill: #cccccc;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-padding: 0 0 4 0;
+}
+
+.log-list {
+    -fx-background-color: transparent;
+    -fx-control-inner-background: #1e1e1e;
+    -fx-font-family: "Consolas", "Menlo", monospace;
+    -fx-font-size: 12px;
+}
+
+.log-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #d0d0d0;
+    -fx-padding: 2 6 2 6;
+}
+
+.log-list .list-cell:filled:hover {
+    -fx-background-color: #2a2a2a;
+}
+
+.log-list .list-cell:filled:selected {
+    -fx-background-color: #094771;
+    -fx-text-fill: white;
+}

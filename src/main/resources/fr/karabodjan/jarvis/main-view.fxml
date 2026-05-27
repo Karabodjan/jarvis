@@ -91,4 +91,14 @@
         </VBox>
     </center>
 
+    <bottom>
+        <VBox styleClass="log-console" prefHeight="180">
+            <padding>
+                <Insets top="8" right="12" bottom="12" left="12"/>
+            </padding>
+            <Label text="Console" styleClass="log-title"/>
+            <ListView fx:id="logListView" styleClass="log-list" VBox.vgrow="ALWAYS"/>
+        </VBox>
+    </bottom>
+
 </BorderPane>

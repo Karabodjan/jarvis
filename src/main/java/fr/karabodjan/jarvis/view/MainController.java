@@ -77,6 +77,14 @@ public class MainController {
                 (observable, oldRun, newRun) -> bindToRun(newRun)
         );
 
+        // Bind the log console to the global log feed.
+        logListView.setItems(listViewModel.getLogs());
+        // Auto-scroll to the latest line whenever a new log is appended.
+        listViewModel.getLogs().addListener(
+                (javafx.collections.ListChangeListener<String>) change ->
+                        logListView.scrollTo(listViewModel.getLogs().size() - 1)
+        );
+
         bindToRun(null);
     }
 
@@ -159,6 +167,9 @@ public class MainController {
         }
         listViewModel.cancel(boundRun);
     }
+
+    @FXML
+    private ListView<String> logListView;
 
     // --- Sidebar cell with status dot ----------------------------------
 

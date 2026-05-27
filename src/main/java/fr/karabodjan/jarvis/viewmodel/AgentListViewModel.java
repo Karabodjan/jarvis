@@ -4,21 +4,32 @@ import fr.karabodjan.jarvis.model.Agent;
 import fr.karabodjan.jarvis.model.run.AgentRunStatus;
 import fr.karabodjan.jarvis.service.AgentTask;
 import fr.karabodjan.jarvis.service.IAgentService;
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+
 public final class AgentListViewModel {
+
+    private static final int MAX_LOG_LINES = 500;
+
+    private static final DateTimeFormatter LOG_TIME_FORMAT =
+            DateTimeFormatter.ofPattern("HH:mm:ss");
 
     private final IAgentService agentService;
 
     private final ObservableList<AgentRunViewModel> agents =
             FXCollections.observableArrayList();
+
+    private final ObservableList<String> logs =
+            FXCollections.observableArrayList();
+
 
     private final Map<String, AgentTask> runningTasks = new HashMap<>();
 
@@ -40,6 +51,12 @@ public final class AgentListViewModel {
         return agents;
     }
 
+    public ObservableList<String> getLogs() {
+        return logs;
+    }
+
+    // --- launch / cancel -----------------------------------------------
+
     public void launch(AgentRunViewModel runVm) {
         Objects.requireNonNull(runVm, "runVm must not be null");
         if (runVm.isRunning()) {
@@ -49,13 +66,19 @@ public final class AgentListViewModel {
         Agent agent = runVm.getAgent();
         AgentTask task = agentService.launch(agent);
 
-        // Reset the run slot to a clean RUNNING state.
         runVm.setStatus(AgentRunStatus.RUNNING);
         runVm.setMessage("Launching...");
         runVm.setProgress(0.0);
 
-        // the run view model directly.
-        task.messageProperty().addListener((obs, oldMsg, newMsg) -> runVm.setMessage(newMsg));
+        appendLog(agent, "▶ Launching agent");
+
+        task.messageProperty().addListener((obs, oldMsg, newMsg) -> {
+            runVm.setMessage(newMsg);
+            // Skip empty messages (initial state) to avoid noise.
+            if (newMsg != null && !newMsg.isBlank()) {
+                appendLog(agent, newMsg);
+            }
+        });
         task.progressProperty().addListener((obs, oldP, newP) -> runVm.setProgress(newP.doubleValue()));
 
         task.setOnSucceeded(event -> handleSucceeded(runVm, task));
@@ -64,13 +87,10 @@ public final class AgentListViewModel {
 
         runningTasks.put(agent.getId(), task);
 
-        // Start the background thread AFTER listeners are registered —
-
         Thread thread = new Thread(task, "agent-run-" + agent.getId());
-        thread.setDaemon(true);  // JVM can exit without waiting for in-flight runs
+        thread.setDaemon(true);
         thread.start();
     }
-
 
     public void cancel(AgentRunViewModel runVm) {
         Objects.requireNonNull(runVm, "runVm must not be null");
@@ -89,6 +109,11 @@ public final class AgentListViewModel {
         runVm.setProgress(1.0);
         runVm.setLastResult(result);
         runningTasks.remove(runVm.getAgent().getId());
+
+        appendLog(runVm.getAgent(), "✔ Completed — " + result.summary());
+        if (result.prUrl() != null) {
+            appendLog(runVm.getAgent(), "  PR: " + result.prUrl());
+        }
     }
 
     private void handleFailed(AgentRunViewModel runVm, AgentTask task) {
@@ -97,9 +122,10 @@ public final class AgentListViewModel {
 
         runVm.setStatus(AgentRunStatus.FAILED);
         runVm.setMessage("Failed: " + errorMessage);
-
         runVm.setLastResult(null);
         runningTasks.remove(runVm.getAgent().getId());
+
+        appendLog(runVm.getAgent(), "✖ Failed — " + errorMessage);
     }
 
     private void handleCancelled(AgentRunViewModel runVm, AgentTask task) {
@@ -107,11 +133,24 @@ public final class AgentListViewModel {
         runVm.setMessage("Cancelled by user.");
         runVm.setLastResult(null);
         runningTasks.remove(runVm.getAgent().getId());
+
+        appendLog(runVm.getAgent(), "⏹ Cancelled by user");
     }
 
-    // --- diagnostics ---------------------------------------------------
+    // --- logs -----------------------------------------------------------
 
-    /** Number of runs currently in progress. For tests and debugging. */
+    private void appendLog(Agent agent, String message) {
+        String line = "[" + LocalTime.now().format(LOG_TIME_FORMAT) + "] "
+                + "[" + agent.getName() + "] "
+                + message;
+        logs.add(line);
+        if (logs.size() > MAX_LOG_LINES) {
+            logs.remove(0);
+        }
+    }
+
+    // --- diagnostics ----------------------------------------------------
+
     public int getRunningCount() {
         return runningTasks.size();
     }
