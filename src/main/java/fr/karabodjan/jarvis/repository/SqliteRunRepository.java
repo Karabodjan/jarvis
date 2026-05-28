@@ -1,12 +1,16 @@
 package fr.karabodjan.jarvis.repository;
 
+import fr.karabodjan.jarvis.model.run.AgentRunStatus;
 import fr.karabodjan.jarvis.model.run.PersistedRun;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 public class SqliteRunRepository implements RunHistoryRepository {
@@ -34,6 +38,12 @@ public class SqliteRunRepository implements RunHistoryRepository {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
 
+    private static final String SELECT_ALL_RUNS = """
+            SELECT run_id, agent_id, agent_name, status,
+                   started_at, completed_at, pr_url, error_message, merged
+            FROM agent_runs
+            ORDER BY started_at DESC
+            """;
 
     public SqliteRunRepository(String dbPath) {
         this.jdbcUrl = "jdbc:sqlite:" + dbPath;
@@ -70,6 +80,30 @@ public class SqliteRunRepository implements RunHistoryRepository {
 
     @Override
     public List<PersistedRun> listRuns() {
-        throw new UnsupportedOperationException("listRuns: implementado no próximo commit");
+        List<PersistedRun> runs = new ArrayList<>();
+        try (Connection conn = DriverManager.getConnection(jdbcUrl);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(SELECT_ALL_RUNS)) {
+            while (rs.next()) {
+                runs.add(mapRow(rs));
+            }
+        } catch (SQLException e) {
+            throw new JarvisStorageException("Failed to list runs", e);
+        }
+        return runs;
+    }
+
+    private PersistedRun mapRow(ResultSet rs) throws SQLException {
+        return new PersistedRun(
+                rs.getString("run_id"),
+                rs.getString("agent_id"),
+                rs.getString("agent_name"),
+                AgentRunStatus.valueOf(rs.getString("status")),  // inverso de name()
+                Instant.parse(rs.getString("started_at")),       // inverso de toString()
+                Instant.parse(rs.getString("completed_at")),
+                rs.getString("pr_url"),                          // null se SQL NULL
+                rs.getString("error_message"),
+                rs.getInt("merged") != 0                         // 0/1 -> boolean
+        );
     }
 }
