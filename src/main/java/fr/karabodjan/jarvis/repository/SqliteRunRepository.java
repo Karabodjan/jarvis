@@ -4,6 +4,7 @@ import fr.karabodjan.jarvis.model.run.PersistedRun;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
@@ -26,6 +27,14 @@ public class SqliteRunRepository implements RunHistoryRepository {
             )
             """;
 
+    private static final String INSERT_RUN = """
+            INSERT INTO agent_runs
+                (run_id, agent_id, agent_name, status,
+                 started_at, completed_at, pr_url, error_message, merged)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """;
+
+
     public SqliteRunRepository(String dbPath) {
         this.jdbcUrl = "jdbc:sqlite:" + dbPath;
         initSchema();
@@ -42,7 +51,21 @@ public class SqliteRunRepository implements RunHistoryRepository {
 
     @Override
     public void saveRun(PersistedRun run) {
-        throw new UnsupportedOperationException("saveRun: implementado no próximo commit");
+        try (Connection conn = DriverManager.getConnection(jdbcUrl);
+             PreparedStatement ps = conn.prepareStatement(INSERT_RUN)) {
+            ps.setString(1, run.runId());
+            ps.setString(2, run.agentId());
+            ps.setString(3, run.agentName());
+            ps.setString(4, run.status().name());         // enum por name(), nunca ordinal()
+            ps.setString(5, run.startedAt().toString());  // Instant -> ISO-8601
+            ps.setString(6, run.completedAt().toString());
+            ps.setString(7, run.prUrl());                 // null -> SQL NULL
+            ps.setString(8, run.errorMessage());          // null -> SQL NULL
+            ps.setInt(9, run.merged() ? 1 : 0);           // boolean -> 0/1
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new JarvisStorageException("Failed to save run " + run.runId(), e);
+        }
     }
 
     @Override
