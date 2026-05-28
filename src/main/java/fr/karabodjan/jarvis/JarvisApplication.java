@@ -1,6 +1,8 @@
 package fr.karabodjan.jarvis;
 
 import fr.karabodjan.jarvis.model.Agent;
+import fr.karabodjan.jarvis.repository.RunHistoryRepository;
+import fr.karabodjan.jarvis.repository.SqliteRunRepository;
 import fr.karabodjan.jarvis.service.IAgentService;
 import fr.karabodjan.jarvis.service.MockAgentService;
 import fr.karabodjan.jarvis.util.JarvisConfigException;
@@ -24,19 +26,21 @@ public class JarvisApplication extends Application {
         // Load agent definitions from JSON.
         List<Agent> agents = loadAgentsSafely();
 
-
         IAgentService agentService = new MockAgentService();
 
-        AgentListViewModel listViewModel = new AgentListViewModel(agentService);
+        // Persistence: SQLite repository (cria jarvis.db + schema no 1º arranque).
+        RunHistoryRepository runHistoryRepository = new SqliteRunRepository("jarvis.db");
+
+        AgentListViewModel listViewModel =
+                new AgentListViewModel(agentService, runHistoryRepository);
         listViewModel.setAgents(agents);
 
-        // 4. Load the FXML and inject the ViewModel into the controller.
+        // Load the FXML and inject the ViewModel into the controller.
         FXMLLoader fxmlLoader = new FXMLLoader(JarvisApplication.class.getResource("main-view.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 1000, 650);
         MainController controller = fxmlLoader.getController();
         controller.setViewModel(listViewModel);
         controller.init();
-
 
         stage.setTitle("J.A.R.V.I.S. — Control Tower");
         stage.setScene(scene);
