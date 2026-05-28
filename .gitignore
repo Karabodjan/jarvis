@@ -57,6 +57,12 @@ replay_pid*.log
 *.pem
 secrets/
 
+### SQLite — dados de runtime ####
+jarvis.db
+jarvis.db-journal
+jarvis.db-wal
+jarvis.db-shm
+
 ### Maven ###
 dependency-reduced-pom.xml
 .mvn/timing.properties

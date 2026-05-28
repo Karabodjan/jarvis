@@ -2,6 +2,8 @@ module fr.karabodjan.jarvis {
     requires javafx.controls;
     requires javafx.fxml;
     requires com.fasterxml.jackson.databind;
+    requires java.sql;
+    requires org.xerial.sqlitejdbc;
 
 
     opens fr.karabodjan.jarvis to javafx.fxml;
