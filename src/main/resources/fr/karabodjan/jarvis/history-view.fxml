@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="fr.karabodjan.jarvis.view.HistoryController">
+
+    <top>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+            <Label text="Agente:"/>
+            <ComboBox fx:id="agentFilter" prefWidth="180"/>
+            <Label text="Status:"/>
+            <ComboBox fx:id="statusFilter" prefWidth="140"/>
+            <Button fx:id="refreshButton" text="↻ Refresh"/>
+        </HBox>
+    </top>
+
+    <center>
+        <TableView fx:id="historyTable">
+            <columns>
+                <TableColumn fx:id="agentColumn" text="Agente" prefWidth="160"/>
+                <TableColumn fx:id="statusColumn" text="Status" prefWidth="110"/>
+                <TableColumn fx:id="startedAtColumn" text="Início" prefWidth="170"/>
+                <TableColumn fx:id="durationColumn" text="Duração" prefWidth="90"/>
+                <TableColumn fx:id="prUrlColumn" text="Pull Request" prefWidth="280"/>
+            </columns>
+        </TableView>
+    </center>
+</BorderPane>

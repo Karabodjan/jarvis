@@ -3,11 +3,14 @@ package fr.karabodjan.jarvis.view;
 import fr.karabodjan.jarvis.model.run.AgentRunStatus;
 import fr.karabodjan.jarvis.viewmodel.AgentListViewModel;
 import fr.karabodjan.jarvis.viewmodel.AgentRunViewModel;
+import fr.karabodjan.jarvis.viewmodel.RunHistoryViewModel;
 import javafx.beans.value.ChangeListener;
 import javafx.css.PseudoClass;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
@@ -15,7 +18,9 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.EnumMap;
@@ -52,10 +57,15 @@ public class MainController {
     @FXML private ProgressBar detailProgressBar;
     @FXML private Button launchButton;
     @FXML private Button cancelButton;
+    @FXML private Button historyButton;
+    @FXML private ListView<String> logListView;
 
     private AgentListViewModel listViewModel;
+    private RunHistoryViewModel runHistoryViewModel;
 
     private AgentRunViewModel boundRun;
+
+    private Stage historyStage;
 
     private final ChangeListener<AgentRunStatus> statusListener =
             (obs, oldStatus, newStatus) -> {
@@ -67,8 +77,13 @@ public class MainController {
         this.listViewModel = Objects.requireNonNull(listViewModel, "listViewModel must not be null");
     }
 
+    public void setRunHistoryViewModel(RunHistoryViewModel runHistoryViewModel) {
+        this.runHistoryViewModel = Objects.requireNonNull(runHistoryViewModel, "runHistoryViewModel must not be null");
+    }
+
     public void init() {
         Objects.requireNonNull(listViewModel, "setViewModel must be called before init");
+        Objects.requireNonNull(runHistoryViewModel, "setRunHistoryViewModel must be called before init");
 
         agentListView.setItems(listViewModel.getAgents());
         agentListView.setCellFactory(listView -> new AgentRunCell());
@@ -79,7 +94,6 @@ public class MainController {
 
         // Bind the log console to the global log feed.
         logListView.setItems(listViewModel.getLogs());
-        // Auto-scroll to the latest line whenever a new log is appended.
         listViewModel.getLogs().addListener(
                 (javafx.collections.ListChangeListener<String>) change ->
                         logListView.scrollTo(listViewModel.getLogs().size() - 1)
@@ -126,23 +140,16 @@ public class MainController {
         boundRun = runVm;
         runVm.statusProperty().addListener(statusListener);
 
-        // Apply visuals for current state immediately.
         applyStatusPseudoClass(detailStatusLabel, runVm.getStatus());
         refreshActionButtons(runVm.getStatus());
     }
 
     private void refreshActionButtons(AgentRunStatus status) {
         boolean running = (status == AgentRunStatus.RUNNING);
-
-        // Launch is disabled while running, enabled otherwise (allows re-launch
-        // after a terminal state).
         launchButton.setDisable(running);
-
-        // Cancel is only visible while running — it has no meaning in other states.
         cancelButton.setVisible(running);
         cancelButton.setManaged(running);
     }
-
 
     private static void applyStatusPseudoClass(Node node, AgentRunStatus status) {
         for (Map.Entry<AgentRunStatus, PseudoClass> entry : PSEUDO_BY_STATUS.entrySet()) {
@@ -154,25 +161,42 @@ public class MainController {
 
     @FXML
     private void onLaunchClicked() {
-        if (boundRun == null) {
-            return;
-        }
+        if (boundRun == null) return;
         listViewModel.launch(boundRun);
     }
 
     @FXML
     private void onCancelClicked() {
-        if (boundRun == null) {
-            return;
-        }
+        if (boundRun == null) return;
         listViewModel.cancel(boundRun);
     }
 
     @FXML
-    private ListView<String> logListView;
+    private void onHistoryClicked() {
+        try {
+            if (historyStage == null) {
+                FXMLLoader loader = new FXMLLoader(
+                        getClass().getResource("/fr/karabodjan/jarvis/history-view.fxml")
+                );
+                Scene scene = new Scene(loader.load(), 900, 500);
+
+                HistoryController historyController = loader.getController();
+                historyController.setViewModel(runHistoryViewModel);
+                historyController.init();
+
+                historyStage = new Stage();
+                historyStage.setTitle("J.A.R.V.I.S. — Run History");
+                historyStage.setScene(scene);
+            }
+            runHistoryViewModel.refresh();
+            historyStage.show();
+            historyStage.toFront();
+        } catch (IOException e) {
+            System.err.println("[JARVIS] Failed to open history window: " + e.getMessage());
+        }
+    }
 
     // --- Sidebar cell with status dot ----------------------------------
-
 
     private static final class AgentRunCell extends ListCell<AgentRunViewModel> {
 
@@ -180,7 +204,6 @@ public class MainController {
         private final Label name = new Label();
         private final HBox layout = new HBox(dot, name);
 
-        /** Currently observed run vm — needed to detach the listener on recycling. */
         private AgentRunViewModel observed;
 
         private final ChangeListener<AgentRunStatus> dotListener =
@@ -195,7 +218,6 @@ public class MainController {
         protected void updateItem(AgentRunViewModel runVm, boolean empty) {
             super.updateItem(runVm, empty);
 
-            // Detach from any previous run (cells are recycled by ListView).
             if (observed != null) {
                 observed.statusProperty().removeListener(dotListener);
                 observed = null;

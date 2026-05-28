@@ -9,6 +9,7 @@ import fr.karabodjan.jarvis.util.JarvisConfigException;
 import fr.karabodjan.jarvis.util.JsonLoader;
 import fr.karabodjan.jarvis.view.MainController;
 import fr.karabodjan.jarvis.viewmodel.AgentListViewModel;
+import fr.karabodjan.jarvis.viewmodel.RunHistoryViewModel;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -28,18 +29,21 @@ public class JarvisApplication extends Application {
 
         IAgentService agentService = new MockAgentService();
 
-        // Persistence: SQLite repository (cria jarvis.db + schema no 1º arranque).
         RunHistoryRepository runHistoryRepository = new SqliteRunRepository("jarvis.db");
 
         AgentListViewModel listViewModel =
                 new AgentListViewModel(agentService, runHistoryRepository);
         listViewModel.setAgents(agents);
 
-        // Load the FXML and inject the ViewModel into the controller.
+        RunHistoryViewModel runHistoryViewModel =
+                new RunHistoryViewModel(runHistoryRepository);
+
+        // Load the FXML and inject the ViewModels into the controller.
         FXMLLoader fxmlLoader = new FXMLLoader(JarvisApplication.class.getResource("main-view.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 1000, 650);
         MainController controller = fxmlLoader.getController();
         controller.setViewModel(listViewModel);
+        controller.setRunHistoryViewModel(runHistoryViewModel);
         controller.init();
 
         stage.setTitle("J.A.R.V.I.S. — Control Tower");
