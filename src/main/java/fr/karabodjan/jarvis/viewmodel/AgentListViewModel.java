@@ -1,5 +1,6 @@
 package fr.karabodjan.jarvis.viewmodel;
 
+import fr.karabodjan.jarvis.integration.VoiceService;
 import fr.karabodjan.jarvis.model.Agent;
 import fr.karabodjan.jarvis.model.run.AgentResult;
 import fr.karabodjan.jarvis.model.run.AgentRunStatus;
@@ -32,6 +33,7 @@ public final class AgentListViewModel {
 
     private final IAgentService agentService;
     private final RunHistoryRepository runHistoryRepository;
+    private final VoiceService voiceService;
 
     private final ObservableList<AgentRunViewModel> agents =
             FXCollections.observableArrayList();
@@ -41,8 +43,6 @@ public final class AgentListViewModel {
 
     private final Map<String, AgentTask> runningTasks = new HashMap<>();
 
-    // Single-thread daemon executor: persistência assíncrona E serializada
-    // (não bloqueia a FX thread, e evita escritas SQLite concorrentes).
     private final ExecutorService persistExecutor =
             Executors.newSingleThreadExecutor(r -> {
                 Thread t = new Thread(r, "jarvis-persist");
@@ -51,9 +51,11 @@ public final class AgentListViewModel {
             });
 
     public AgentListViewModel(IAgentService agentService,
-                              RunHistoryRepository runHistoryRepository) {
+                              RunHistoryRepository runHistoryRepository,
+                              VoiceService voiceService) {
         this.agentService = Objects.requireNonNull(agentService, "agentService must not be null");
         this.runHistoryRepository = Objects.requireNonNull(runHistoryRepository, "runHistoryRepository must not be null");
+        this.voiceService = Objects.requireNonNull(voiceService, "voiceService must not be null");
     }
 
     // --- loading --------------------------------------------------------
@@ -85,8 +87,6 @@ public final class AgentListViewModel {
         Agent agent = runVm.getAgent();
         AgentTask task = agentService.launch(agent);
 
-        // Momento aproximado de início — usado nas runs que falham ou são
-        // canceladas (nesses casos não há AgentResult com startedAt).
         Instant launchedAt = Instant.now();
 
         runVm.setStatus(AgentRunStatus.RUNNING);
@@ -95,14 +95,16 @@ public final class AgentListViewModel {
 
         appendLog(agent, "▶ Launching agent");
 
+        voiceService.speak("Agent launched. Awaiting response.");
+
         task.messageProperty().addListener((obs, oldMsg, newMsg) -> {
             runVm.setMessage(newMsg);
-            // Skip empty messages (initial state) to avoid noise.
             if (newMsg != null && !newMsg.isBlank()) {
                 appendLog(agent, newMsg);
             }
         });
-        task.progressProperty().addListener((obs, oldP, newP) -> runVm.setProgress(newP.doubleValue()));
+        task.progressProperty().addListener((obs, oldP, newP) ->
+                runVm.setProgress(newP.doubleValue()));
 
         task.setOnSucceeded(event -> handleSucceeded(runVm, task));
         task.setOnFailed(event -> handleFailed(runVm, task, launchedAt));
@@ -138,6 +140,9 @@ public final class AgentListViewModel {
             appendLog(runVm.getAgent(), "  PR: " + result.prUrl());
         }
 
+        // (4) Voz ao completar com sucesso
+        voiceService.speak("Mission accomplished. Pull Request submitted.");
+
         persistAsync(toPersistedRun(runVm.getAgent(), result));
     }
 
@@ -152,6 +157,9 @@ public final class AgentListViewModel {
 
         appendLog(runVm.getAgent(), "✖ Failed — " + errorMessage);
 
+        // (5) Voz ao falhar
+        voiceService.speak("Warning. Agent failed. Review logs.");
+
         persistAsync(new PersistedRun(
                 UUID.randomUUID().toString(),
                 runVm.getAgent().getId(),
@@ -159,9 +167,9 @@ public final class AgentListViewModel {
                 AgentRunStatus.FAILED,
                 startedAt,
                 Instant.now(),
-                null,           // prUrl
+                null,
                 errorMessage,
-                false           // merged
+                false
         ));
     }
 
@@ -173,6 +181,7 @@ public final class AgentListViewModel {
 
         appendLog(runVm.getAgent(), "⏹ Cancelled by user");
 
+
         persistAsync(new PersistedRun(
                 UUID.randomUUID().toString(),
                 runVm.getAgent().getId(),
@@ -180,9 +189,9 @@ public final class AgentListViewModel {
                 AgentRunStatus.CANCELLED,
                 startedAt,
                 Instant.now(),
-                null,           // prUrl
-                null,           // errorMessage
-                false           // merged
+                null,
+                null,
+                false
         ));
     }
 
@@ -198,7 +207,7 @@ public final class AgentListViewModel {
                 result.completedAt(),
                 result.prUrl(),
                 result.errorMessage(),
-                false           // merged: sempre false até à Fase 5 (auto-merge)
+                false
         );
     }
 

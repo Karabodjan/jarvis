@@ -1,5 +1,6 @@
 package fr.karabodjan.jarvis;
 
+import fr.karabodjan.jarvis.integration.VoiceService;
 import fr.karabodjan.jarvis.model.Agent;
 import fr.karabodjan.jarvis.repository.RunHistoryRepository;
 import fr.karabodjan.jarvis.repository.SqliteRunRepository;
@@ -22,24 +23,26 @@ import java.util.List;
 
 public class JarvisApplication extends Application {
 
+    private VoiceService voiceService;
+
     @Override
     public void start(Stage stage) throws IOException {
-        // Load agent definitions from JSON.
         List<Agent> agents = loadAgentsSafely();
 
         IAgentService agentService = new MockAgentService();
-
         RunHistoryRepository runHistoryRepository = new SqliteRunRepository("jarvis.db");
 
+        voiceService = new VoiceService();
+
         AgentListViewModel listViewModel =
-                new AgentListViewModel(agentService, runHistoryRepository);
+                new AgentListViewModel(agentService, runHistoryRepository, voiceService);
         listViewModel.setAgents(agents);
 
         RunHistoryViewModel runHistoryViewModel =
                 new RunHistoryViewModel(runHistoryRepository);
 
-        // Load the FXML and inject the ViewModels into the controller.
-        FXMLLoader fxmlLoader = new FXMLLoader(JarvisApplication.class.getResource("main-view.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(
+                JarvisApplication.class.getResource("main-view.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 1000, 650);
         MainController controller = fxmlLoader.getController();
         controller.setViewModel(listViewModel);
@@ -49,6 +52,13 @@ public class JarvisApplication extends Application {
         stage.setTitle("J.A.R.V.I.S. — Control Tower");
         stage.setScene(scene);
         stage.show();
+    }
+
+    @Override
+    public void stop() {
+        if (voiceService != null) {
+            voiceService.shutdown();
+        }
     }
 
     private List<Agent> loadAgentsSafely() {

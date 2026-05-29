@@ -116,6 +116,8 @@ public class HistoryController {
 
     private void writeCsv(List<PersistedRun> runs, Path target) throws IOException {
         try (BufferedWriter writer = Files.newBufferedWriter(target, StandardCharsets.UTF_8)) {
+            writer.write("sep=,");
+            writer.newLine();
             writer.write(CSV_HEADER);
             writer.newLine();
             for (PersistedRun r : runs) {
