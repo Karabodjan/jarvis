@@ -6,6 +6,8 @@ import fr.karabodjan.jarvis.repository.RunHistoryRepository;
 import fr.karabodjan.jarvis.repository.SqliteRunRepository;
 import fr.karabodjan.jarvis.service.IAgentService;
 import fr.karabodjan.jarvis.service.MockAgentService;
+import fr.karabodjan.jarvis.util.ConfigLoader;
+import fr.karabodjan.jarvis.util.JarvisConfig;
 import fr.karabodjan.jarvis.util.JarvisConfigException;
 import fr.karabodjan.jarvis.util.JsonLoader;
 import fr.karabodjan.jarvis.view.MainController;
@@ -29,9 +31,11 @@ public class JarvisApplication extends Application {
     public void start(Stage stage) throws IOException {
         List<Agent> agents = loadAgentsSafely();
 
+        // (1) Config carregada antes de tudo o resto — as integrações precisam dela
+        JarvisConfig config = new ConfigLoader().load();
+
         IAgentService agentService = new MockAgentService();
         RunHistoryRepository runHistoryRepository = new SqliteRunRepository("jarvis.db");
-
         voiceService = new VoiceService();
 
         AgentListViewModel listViewModel =

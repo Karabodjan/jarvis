@@ -67,3 +67,6 @@ jarvis.db-shm
 dependency-reduced-pom.xml
 .mvn/timing.properties
 .mvn/wrapper/maven-wrapper.properties
+
+
+src/main/resources/config.json
