@@ -45,6 +45,11 @@ public class SqliteRunRepository implements RunHistoryRepository {
             ORDER BY started_at DESC
             """;
 
+    // (1) Query nova — UPDATE simples por runId
+    private static final String UPDATE_MERGED = """
+            UPDATE agent_runs SET merged = 1 WHERE run_id = ?
+            """;
+
     public SqliteRunRepository(String dbPath) {
         this.jdbcUrl = "jdbc:sqlite:" + dbPath;
         initSchema();
@@ -66,12 +71,12 @@ public class SqliteRunRepository implements RunHistoryRepository {
             ps.setString(1, run.runId());
             ps.setString(2, run.agentId());
             ps.setString(3, run.agentName());
-            ps.setString(4, run.status().name());         // enum por name(), nunca ordinal()
-            ps.setString(5, run.startedAt().toString());  // Instant -> ISO-8601
+            ps.setString(4, run.status().name());
+            ps.setString(5, run.startedAt().toString());
             ps.setString(6, run.completedAt().toString());
-            ps.setString(7, run.prUrl());                 // null -> SQL NULL
-            ps.setString(8, run.errorMessage());          // null -> SQL NULL
-            ps.setInt(9, run.merged() ? 1 : 0);           // boolean -> 0/1
+            ps.setString(7, run.prUrl());
+            ps.setString(8, run.errorMessage());
+            ps.setInt(9, run.merged() ? 1 : 0);
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new JarvisStorageException("Failed to save run " + run.runId(), e);
@@ -93,17 +98,28 @@ public class SqliteRunRepository implements RunHistoryRepository {
         return runs;
     }
 
+    @Override
+    public void updateMerged(String runId) {
+        try (Connection conn = DriverManager.getConnection(jdbcUrl);
+             PreparedStatement ps = conn.prepareStatement(UPDATE_MERGED)) {
+            ps.setString(1, runId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new JarvisStorageException("Failed to update merged for run " + runId, e);
+        }
+    }
+
     private PersistedRun mapRow(ResultSet rs) throws SQLException {
         return new PersistedRun(
                 rs.getString("run_id"),
                 rs.getString("agent_id"),
                 rs.getString("agent_name"),
-                AgentRunStatus.valueOf(rs.getString("status")),  // inverso de name()
-                Instant.parse(rs.getString("started_at")),       // inverso de toString()
+                AgentRunStatus.valueOf(rs.getString("status")),
+                Instant.parse(rs.getString("started_at")),
                 Instant.parse(rs.getString("completed_at")),
-                rs.getString("pr_url"),                          // null se SQL NULL
+                rs.getString("pr_url"),
                 rs.getString("error_message"),
-                rs.getInt("merged") != 0                         // 0/1 -> boolean
+                rs.getInt("merged") != 0
         );
     }
 }

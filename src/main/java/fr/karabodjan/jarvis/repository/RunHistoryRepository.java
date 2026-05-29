@@ -10,4 +10,6 @@ public interface RunHistoryRepository {
     void saveRun(PersistedRun run);
 
     List<PersistedRun> listRuns();
+
+    void updateMerged(String runId);
 }
