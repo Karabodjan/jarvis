@@ -1,5 +1,6 @@
 package fr.karabodjan.jarvis.viewmodel;
 
+import fr.karabodjan.jarvis.integration.DiscordNotifier;
 import fr.karabodjan.jarvis.integration.VoiceService;
 import fr.karabodjan.jarvis.model.Agent;
 import fr.karabodjan.jarvis.model.run.AgentResult;
@@ -34,6 +35,7 @@ public final class AgentListViewModel {
     private final IAgentService agentService;
     private final RunHistoryRepository runHistoryRepository;
     private final VoiceService voiceService;
+    private final DiscordNotifier discordNotifier;
 
     private final ObservableList<AgentRunViewModel> agents =
             FXCollections.observableArrayList();
@@ -52,10 +54,12 @@ public final class AgentListViewModel {
 
     public AgentListViewModel(IAgentService agentService,
                               RunHistoryRepository runHistoryRepository,
-                              VoiceService voiceService) {
-        this.agentService = Objects.requireNonNull(agentService, "agentService must not be null");
-        this.runHistoryRepository = Objects.requireNonNull(runHistoryRepository, "runHistoryRepository must not be null");
-        this.voiceService = Objects.requireNonNull(voiceService, "voiceService must not be null");
+                              VoiceService voiceService,
+                              DiscordNotifier discordNotifier) {
+        this.agentService         = Objects.requireNonNull(agentService);
+        this.runHistoryRepository = Objects.requireNonNull(runHistoryRepository);
+        this.voiceService         = Objects.requireNonNull(voiceService);
+        this.discordNotifier      = Objects.requireNonNull(discordNotifier);
     }
 
     // --- loading --------------------------------------------------------
@@ -68,25 +72,17 @@ public final class AgentListViewModel {
         }
     }
 
-    public ObservableList<AgentRunViewModel> getAgents() {
-        return agents;
-    }
-
-    public ObservableList<String> getLogs() {
-        return logs;
-    }
+    public ObservableList<AgentRunViewModel> getAgents() { return agents; }
+    public ObservableList<String> getLogs()              { return logs;   }
 
     // --- launch / cancel -----------------------------------------------
 
     public void launch(AgentRunViewModel runVm) {
         Objects.requireNonNull(runVm, "runVm must not be null");
-        if (runVm.isRunning()) {
-            return;
-        }
+        if (runVm.isRunning()) return;
 
         Agent agent = runVm.getAgent();
         AgentTask task = agentService.launch(agent);
-
         Instant launchedAt = Instant.now();
 
         runVm.setStatus(AgentRunStatus.RUNNING);
@@ -94,24 +90,20 @@ public final class AgentListViewModel {
         runVm.setProgress(0.0);
 
         appendLog(agent, "▶ Launching agent");
-
         voiceService.speak("Agent launched. Awaiting response.");
 
         task.messageProperty().addListener((obs, oldMsg, newMsg) -> {
             runVm.setMessage(newMsg);
-            if (newMsg != null && !newMsg.isBlank()) {
-                appendLog(agent, newMsg);
-            }
+            if (newMsg != null && !newMsg.isBlank()) appendLog(agent, newMsg);
         });
         task.progressProperty().addListener((obs, oldP, newP) ->
                 runVm.setProgress(newP.doubleValue()));
 
         task.setOnSucceeded(event -> handleSucceeded(runVm, task));
-        task.setOnFailed(event -> handleFailed(runVm, task, launchedAt));
+        task.setOnFailed(event   -> handleFailed(runVm, task, launchedAt));
         task.setOnCancelled(event -> handleCancelled(runVm, launchedAt));
 
         runningTasks.put(agent.getId(), task);
-
         Thread thread = new Thread(task, "agent-run-" + agent.getId());
         thread.setDaemon(true);
         thread.start();
@@ -120,9 +112,7 @@ public final class AgentListViewModel {
     public void cancel(AgentRunViewModel runVm) {
         Objects.requireNonNull(runVm, "runVm must not be null");
         AgentTask task = runningTasks.get(runVm.getAgent().getId());
-        if (task != null) {
-            task.cancel();
-        }
+        if (task != null) task.cancel();
     }
 
     // --- callbacks ------------------------------------------------------
@@ -140,10 +130,12 @@ public final class AgentListViewModel {
             appendLog(runVm.getAgent(), "  PR: " + result.prUrl());
         }
 
-        // (4) Voz ao completar com sucesso
         voiceService.speak("Mission accomplished. Pull Request submitted.");
 
-        persistAsync(toPersistedRun(runVm.getAgent(), result));
+        // (1) Capturar o PersistedRun numa variável para passar a ambos
+        PersistedRun completedRun = toPersistedRun(runVm.getAgent(), result);
+        persistAsync(completedRun);
+        discordNotifier.send(completedRun);
     }
 
     private void handleFailed(AgentRunViewModel runVm, AgentTask task, Instant startedAt) {
@@ -156,11 +148,10 @@ public final class AgentListViewModel {
         runningTasks.remove(runVm.getAgent().getId());
 
         appendLog(runVm.getAgent(), "✖ Failed — " + errorMessage);
-
-        // (5) Voz ao falhar
         voiceService.speak("Warning. Agent failed. Review logs.");
 
-        persistAsync(new PersistedRun(
+        // (2) Mesmo padrão — capturar numa variável, passar a ambos
+        PersistedRun failedRun = new PersistedRun(
                 UUID.randomUUID().toString(),
                 runVm.getAgent().getId(),
                 runVm.getAgent().getName(),
@@ -170,7 +161,9 @@ public final class AgentListViewModel {
                 null,
                 errorMessage,
                 false
-        ));
+        );
+        persistAsync(failedRun);
+        discordNotifier.send(failedRun);
     }
 
     private void handleCancelled(AgentRunViewModel runVm, Instant startedAt) {
@@ -181,7 +174,7 @@ public final class AgentListViewModel {
 
         appendLog(runVm.getAgent(), "⏹ Cancelled by user");
 
-
+        // (3) Cancelamento — persiste mas não notifica Discord
         persistAsync(new PersistedRun(
                 UUID.randomUUID().toString(),
                 runVm.getAgent().getId(),
@@ -229,9 +222,7 @@ public final class AgentListViewModel {
                 + "[" + agent.getName() + "] "
                 + message;
         logs.add(line);
-        if (logs.size() > MAX_LOG_LINES) {
-            logs.remove(0);
-        }
+        if (logs.size() > MAX_LOG_LINES) logs.remove(0);
     }
 
     // --- diagnostics ----------------------------------------------------

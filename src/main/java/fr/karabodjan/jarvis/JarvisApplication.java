@@ -17,6 +17,7 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import fr.karabodjan.jarvis.integration.DiscordNotifier;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -26,20 +27,21 @@ import java.util.List;
 public class JarvisApplication extends Application {
 
     private VoiceService voiceService;
+    private DiscordNotifier discordNotifier;
 
     @Override
     public void start(Stage stage) throws IOException {
         List<Agent> agents = loadAgentsSafely();
 
-        // (1) Config carregada antes de tudo o resto — as integrações precisam dela
         JarvisConfig config = new ConfigLoader().load();
 
         IAgentService agentService = new MockAgentService();
         RunHistoryRepository runHistoryRepository = new SqliteRunRepository("jarvis.db");
         voiceService = new VoiceService();
+        discordNotifier = new DiscordNotifier(config.getDiscordWebhookUrl());
 
         AgentListViewModel listViewModel =
-                new AgentListViewModel(agentService, runHistoryRepository, voiceService);
+                new AgentListViewModel(agentService, runHistoryRepository, voiceService, discordNotifier);
         listViewModel.setAgents(agents);
 
         RunHistoryViewModel runHistoryViewModel =
@@ -60,9 +62,8 @@ public class JarvisApplication extends Application {
 
     @Override
     public void stop() {
-        if (voiceService != null) {
-            voiceService.shutdown();
-        }
+        if (voiceService != null)       voiceService.shutdown();
+        if (discordNotifier != null)    discordNotifier.shutdown();
     }
 
     private List<Agent> loadAgentsSafely() {

@@ -4,6 +4,7 @@ module fr.karabodjan.jarvis {
     requires com.fasterxml.jackson.databind;
     requires java.sql;
     requires org.xerial.sqlitejdbc;
+    requires java.net.http;
 
 
     opens fr.karabodjan.jarvis to javafx.fxml;
