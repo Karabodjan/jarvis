@@ -21,6 +21,7 @@
             <Label text="Status:"/>
             <ComboBox fx:id="statusFilter" prefWidth="140"/>
             <Button fx:id="refreshButton" text="↻ Refresh"/>
+            <Button fx:id="exportButton" text="💾 Exportar CSV" onAction="#onExportClicked"/>
         </HBox>
     </top>
 
