@@ -105,6 +105,27 @@ public class MainController {
         );
 
         bindToRun(null);
+
+        logListView.setCellFactory(lv -> new ListCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) { setText(null); setStyle(null); return; }
+                setText(item);
+                String low = item.toLowerCase(Locale.ROOT);
+                if (low.contains("error") || low.contains("fail") || low.contains("exception")) {
+                    setStyle("-fx-text-fill: #F85149;");
+                } else if (low.contains("merged") || low.contains("complete") || low.contains("done")) {
+                    setStyle("-fx-text-fill: #3FB950;");
+                } else if (low.contains("launched") || low.contains("starting") || low.contains("running")) {
+                    setStyle("-fx-text-fill: #00C7FF;");
+                } else if (low.contains("cancel") || low.contains("warn")) {
+                    setStyle("-fx-text-fill: #E5A00D;");
+                } else {
+                    setStyle("-fx-text-fill: #8B949E;");
+                }
+            }
+        });
     }
 
     // --- selection-driven binding --------------------------------------
@@ -182,12 +203,12 @@ public class MainController {
         autoMergeEnabled.set(nowEnabled);
         if (nowEnabled) {
             autoMergeToggle.setText("ON");
-            autoMergeToggle.setStyle(
-                    "-fx-background-color: #2d7a2d; -fx-text-fill: white; -fx-padding: 6 14 6 14;");
+            autoMergeToggle.getStyleClass().removeAll("toggle-off");
+            autoMergeToggle.getStyleClass().add("toggle-on");
         } else {
             autoMergeToggle.setText("OFF");
-            autoMergeToggle.setStyle(
-                    "-fx-background-color: #555; -fx-text-fill: white; -fx-padding: 6 14 6 14;");
+            autoMergeToggle.getStyleClass().removeAll("toggle-on");
+            autoMergeToggle.getStyleClass().add("toggle-off");
         }
     }
 
@@ -220,7 +241,6 @@ public class MainController {
 
         private final Label dot = new Label("●");
         private final Label name = new Label();
-        private final HBox layout = new HBox(dot, name);
         private AgentRunViewModel observed;
 
         private final ChangeListener<AgentRunStatus> dotListener =
@@ -228,8 +248,11 @@ public class MainController {
 
         AgentRunCell() {
             dot.getStyleClass().add("status-dot");
+            name.getStyleClass().add("agent-list-name");
             layout.setAlignment(Pos.CENTER_LEFT);
         }
+
+        private final HBox layout = new HBox(6, dot, name);
 
         @Override
         protected void updateItem(AgentRunViewModel runVm, boolean empty) {

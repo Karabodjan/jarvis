@@ -7,85 +7,102 @@
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="fr.karabodjan.jarvis.view.MainController"
             prefWidth="1000" prefHeight="650"
+            styleClass="jarvis-root"
             stylesheets="@style.css">
 
     <top>
-        <HBox alignment="CENTER_RIGHT" spacing="10"
-              style="-fx-background-color: #1e1e1e; -fx-padding: 8 15 8 15;">
+        <HBox alignment="CENTER_LEFT" spacing="14" styleClass="jarvis-toolbar">
 
-            <Label text="Auto-merge:" style="-fx-text-fill: #aaa; -fx-font-size: 13px;"/>
+            <!-- Logo (left) -->
+            <VBox alignment="CENTER_LEFT" spacing="2">
+                <Label text="J.A.R.V.I.S." styleClass="jarvis-logo"/>
+                <Label text="Control Tower" styleClass="jarvis-logo-sub"/>
+            </VBox>
+
+            <!-- Spacer: pushes controls to the right -->
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <!-- Controls (right) -->
+            <Label text="AUTO-MERGE" styleClass="jarvis-field-label"/>
             <Button fx:id="autoMergeToggle" text="OFF"
                     onAction="#onAutoMergeToggled"
-                    style="-fx-background-color: #555; -fx-text-fill: white; -fx-padding: 6 14 6 14;"/>
+                    styleClass="toggle-off"/>
 
-            <Button fx:id="historyButton" text="📜 Histórique"
+            <Button fx:id="historyButton" text="📜 History"
                     onAction="#onHistoryClicked"
-                    style="-fx-background-color: #3c3c3c; -fx-text-fill: white; -fx-padding: 6 14 6 14;"/>
+                    styleClass="history-button"/>
         </HBox>
     </top>
 
     <left>
-        <VBox spacing="10" style="-fx-background-color: #2b2b2b;" prefWidth="250">
+        <VBox spacing="0" styleClass="jarvis-sidebar" prefWidth="240">
             <padding>
-                <Insets top="15" right="10" bottom="15" left="10"/>
+                <Insets top="14" right="8" bottom="14" left="8"/>
             </padding>
-            <Label text="Agents" style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;"/>
-            <ListView fx:id="agentListView" VBox.vgrow="ALWAYS"/>
+            <Label text="AGENTS" styleClass="jarvis-sidebar-title">
+                <VBox.margin><Insets bottom="10"/></VBox.margin>
+            </Label>
+            <ListView fx:id="agentListView" styleClass="agent-list" VBox.vgrow="ALWAYS"/>
         </VBox>
     </left>
 
     <center>
-        <VBox spacing="15" alignment="TOP_LEFT">
+        <VBox spacing="12" alignment="TOP_LEFT" styleClass="jarvis-main">
             <padding>
-                <Insets top="30" right="30" bottom="30" left="30"/>
+                <Insets top="28" right="30" bottom="28" left="30"/>
             </padding>
 
             <Label fx:id="detailTitleLabel" text="Select an agent"
-                   style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
+                   styleClass="jarvis-agent-title"/>
 
-            <Label fx:id="detailPlaceholderLabel" text="Pick an agent from the sidebar to see details."
-                   style="-fx-text-fill: gray;"/>
+            <Label fx:id="detailPlaceholderLabel"
+                   text="Pick an agent from the sidebar to see details."
+                   styleClass="jarvis-placeholder"/>
 
-            <VBox fx:id="detailFieldsBox" spacing="8" visible="false" managed="false">
-                <Label text="Repository" style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
-                <Label fx:id="detailRepoLabel" text=""/>
+            <VBox fx:id="detailFieldsBox" spacing="5" visible="false" managed="false">
 
-                <Label text="Task Type" style="-fx-font-weight: bold; -fx-text-fill: #555;">
-                    <VBox.margin><Insets top="10"/></VBox.margin>
+                <Label text="REPOSITORY" styleClass="jarvis-field-label"/>
+                <Label fx:id="detailRepoLabel" text="" styleClass="jarvis-field-value"/>
+
+                <Label text="TASK TYPE" styleClass="jarvis-field-label">
+                    <VBox.margin><Insets top="8"/></VBox.margin>
                 </Label>
-                <Label fx:id="detailTaskTypeLabel" text=""/>
+                <Label fx:id="detailTaskTypeLabel" text="" styleClass="jarvis-field-value"/>
 
-                <Label text="Status" style="-fx-font-weight: bold; -fx-text-fill: #555;">
-                    <VBox.margin><Insets top="10"/></VBox.margin>
+                <Label text="STATUS" styleClass="jarvis-field-label">
+                    <VBox.margin><Insets top="8"/></VBox.margin>
                 </Label>
                 <Label fx:id="detailStatusLabel" text="" styleClass="status-label"/>
 
-                <Label text="Created At" style="-fx-font-weight: bold; -fx-text-fill: #555;">
-                    <VBox.margin><Insets top="10"/></VBox.margin>
+                <Label text="CREATED AT" styleClass="jarvis-field-label">
+                    <VBox.margin><Insets top="8"/></VBox.margin>
                 </Label>
-                <Label fx:id="detailCreatedAtLabel" text=""/>
+                <Label fx:id="detailCreatedAtLabel" text="" styleClass="jarvis-field-value"/>
 
-                <Label text="Message" style="-fx-font-weight: bold; -fx-text-fill: #555;">
-                    <VBox.margin><Insets top="10"/></VBox.margin>
+                <Label text="MESSAGE" styleClass="jarvis-field-label">
+                    <VBox.margin><Insets top="8"/></VBox.margin>
                 </Label>
-                <Label fx:id="detailMessageLabel" text="" wrapText="true"/>
+                <Label fx:id="detailMessageLabel" text="" wrapText="true"
+                       styleClass="jarvis-field-value"/>
 
-                <Label text="Progress" style="-fx-font-weight: bold; -fx-text-fill: #555;">
-                    <VBox.margin><Insets top="10"/></VBox.margin>
+                <Label text="PROGRESS" styleClass="jarvis-field-label">
+                    <VBox.margin><Insets top="8"/></VBox.margin>
                 </Label>
-                <ProgressBar fx:id="detailProgressBar" progress="0.0" prefWidth="400"/>
+                <ProgressBar fx:id="detailProgressBar" progress="0.0"
+                             maxWidth="Infinity"/>
 
                 <HBox spacing="10">
-                    <VBox.margin><Insets top="20"/></VBox.margin>
-                    <Button fx:id="launchButton" text="Launch Agent"
+                    <VBox.margin><Insets top="18"/></VBox.margin>
+                    <Button fx:id="launchButton" text="▶  Launch Agent"
                             onAction="#onLaunchClicked"
-                            style="-fx-font-size: 14px; -fx-padding: 8 20 8 20;"/>
-                    <Button fx:id="cancelButton" text="Cancel"
+                            styleClass="launch-button"/>
+                    <Button fx:id="cancelButton" text="✕  Cancel"
                             onAction="#onCancelClicked"
                             visible="false" managed="false"
                             styleClass="cancel-button"/>
@@ -95,11 +112,11 @@
     </center>
 
     <bottom>
-        <VBox styleClass="log-console" prefHeight="180">
+        <VBox styleClass="log-console" prefHeight="170">
             <padding>
-                <Insets top="8" right="12" bottom="12" left="12"/>
+                <Insets top="8" right="12" bottom="10" left="12"/>
             </padding>
-            <Label text="Console" styleClass="log-title"/>
+            <Label text="CONSOLE" styleClass="log-title"/>
             <ListView fx:id="logListView" styleClass="log-list" VBox.vgrow="ALWAYS"/>
         </VBox>
     </bottom>

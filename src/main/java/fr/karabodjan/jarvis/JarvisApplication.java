@@ -19,6 +19,7 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import javafx.scene.image.Image;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -64,6 +65,9 @@ public class JarvisApplication extends Application {
 
         stage.setTitle("J.A.R.V.I.S. — Control Tower");
         stage.setScene(scene);
+        stage.getIcons().add(
+                new Image(JarvisApplication.class.getResourceAsStream("logo.png"))
+        );
         stage.show();
     }
 

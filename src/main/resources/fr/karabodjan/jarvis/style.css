@@ -1,86 +1,385 @@
 /* ============================================================
-   J.A.R.V.I.S. — Stylesheet
+   J.A.R.V.I.S. — Dark Control Tower Theme
    ============================================================ */
 
-/* ---------- Status label in the detail pane ------------------ */
+/* --- Looked-up colors (JavaFX CSS variables, defined on .root,
+       referenced anywhere in the file as -jarvis-*             ) --- */
+.root {
+    -jarvis-bg-deep:  #0D1117;
+    -jarvis-bg-panel: #161B22;
+    -jarvis-bg-hover: #21262D;
+    -jarvis-border:   #30363D;
+    -jarvis-text:     #C9D1D9;
+    -jarvis-muted:    #8B949E;
+    -jarvis-accent:   #00C7FF;
+
+    /* Override JavaFX default base palette */
+    -fx-base:                     #161B22;
+    -fx-background:               #0D1117;
+    -fx-control-inner-background: #161B22;
+    -fx-accent:                   #00C7FF;
+    -fx-focus-color:              #00C7FF;
+    -fx-faint-focus-color:        rgba(0, 199, 255, 0.08);
+}
+
+/* ── Root container ──────────────────────────────────────── */
+
+.jarvis-root {
+    -fx-background-color: -jarvis-bg-deep;
+}
+
+/* ── Header toolbar ──────────────────────────────────────── */
+
+.jarvis-toolbar {
+    -fx-background-color: -jarvis-bg-panel;
+    -fx-border-color: transparent transparent -jarvis-border transparent;
+    -fx-border-width: 1;
+    -fx-padding: 10 16 10 16;
+}
+
+.jarvis-logo {
+    -fx-text-fill: -jarvis-accent;
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+}
+
+.jarvis-logo-sub {
+    -fx-text-fill: -jarvis-muted;
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 10px;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────── */
+
+.jarvis-sidebar {
+    -fx-background-color: -jarvis-bg-panel;
+    -fx-border-color: transparent -jarvis-border transparent transparent;
+    -fx-border-width: 1;
+}
+
+.jarvis-sidebar-title {
+    -fx-text-fill: -jarvis-muted;
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+
+/* ── Main content area ───────────────────────────────────── */
+
+.jarvis-main {
+    -fx-background-color: -jarvis-bg-deep;
+}
+
+.jarvis-agent-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -jarvis-text;
+}
+
+.jarvis-placeholder {
+    -fx-text-fill: -jarvis-muted;
+    -fx-font-size: 14px;
+}
+
+.jarvis-field-label {
+    -fx-text-fill: -jarvis-muted;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-font-family: "Consolas", "Courier New", monospace;
+}
+
+.jarvis-field-value {
+    -fx-text-fill: -jarvis-text;
+    -fx-font-size: 13px;
+}
+
+/* Agent name inside the sidebar list cell graphic */
+.agent-list-name {
+    -fx-text-fill: #C9D1D9;
+    -fx-font-size: 13px;
+}
+
+/* ── Buttons ─────────────────────────────────────────────── */
+
+.launch-button {
+    -fx-background-color: -jarvis-accent;
+    -fx-text-fill: #0D1117;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+    -fx-padding: 8 22 8 22;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+.launch-button:hover {
+    -fx-background-color: #33D1FF;
+    -fx-effect: dropshadow(gaussian, #00C7FF, 14, 0.4, 0, 0);
+}
+.launch-button:pressed  { -fx-background-color: #0099CC; }
+.launch-button:disabled { -fx-opacity: 0.35; }
+
+.cancel-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #F85149;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+    -fx-padding: 8 22 8 22;
+    -fx-background-radius: 4;
+    -fx-border-color: #F85149;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-cursor: hand;
+}
+.cancel-button:hover { -fx-background-color: rgba(248, 81, 73, 0.12); }
+
+.history-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: -jarvis-muted;
+    -fx-font-size: 12px;
+    -fx-padding: 6 14 6 14;
+    -fx-background-radius: 4;
+    -fx-border-color: -jarvis-border;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-cursor: hand;
+}
+.history-button:hover {
+    -fx-background-color: -jarvis-bg-hover;
+    -fx-text-fill: -jarvis-text;
+}
+
+/* Auto-merge toggle — two states, switched via getStyleClass() in code */
+.toggle-off {
+    -fx-background-color: -jarvis-bg-hover;
+    -fx-text-fill: -jarvis-muted;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 12 6 12;
+    -fx-background-radius: 4;
+    -fx-border-color: -jarvis-border;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-cursor: hand;
+}
+.toggle-on {
+    -fx-background-color: rgba(63, 185, 80, 0.15);
+    -fx-text-fill: #3FB950;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 12 6 12;
+    -fx-background-radius: 4;
+    -fx-border-color: #3FB950;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-cursor: hand;
+}
+
+.export-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: -jarvis-muted;
+    -fx-font-size: 12px;
+    -fx-padding: 5 12 5 12;
+    -fx-background-radius: 4;
+    -fx-border-color: -jarvis-border;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-cursor: hand;
+}
+.export-button:hover {
+    -fx-background-color: -jarvis-bg-hover;
+    -fx-text-fill: -jarvis-text;
+}
+
+/* ── Progress bar ────────────────────────────────────────── */
+
+.progress-bar {
+    -fx-pref-height: 6;
+    -fx-background-color: -jarvis-bg-hover;
+    -fx-background-radius: 4;
+}
+.progress-bar .track {
+    -fx-background-color: -jarvis-bg-hover;
+    -fx-background-radius: 4;
+}
+.progress-bar .bar {
+    -fx-background-color: -jarvis-accent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 4;
+    -fx-effect: dropshadow(gaussian, #00C7FF, 8, 0.5, 0, 0);
+}
+
+/* ── Status indicators ───────────────────────────────────── */
+
+.status-dot {
+    -fx-font-size: 10px;
+    -fx-padding: 0 8 0 2;
+}
+.status-dot:idle      { -fx-text-fill: #8B949E; }
+.status-dot:running   { -fx-text-fill: #00C7FF;
+    -fx-effect: dropshadow(gaussian, #00C7FF, 7, 0.7, 0, 0); }
+.status-dot:completed { -fx-text-fill: #3FB950; }
+.status-dot:failed    { -fx-text-fill: #F85149; }
+.status-dot:cancelled { -fx-text-fill: #E5A00D; }
 
 .status-label {
     -fx-font-weight: bold;
-}
-
-.status-label:idle      { -fx-text-fill: #9e9e9e; }
-.status-label:running   { -fx-text-fill: #f39c12; }
-.status-label:completed { -fx-text-fill: #27ae60; }
-.status-label:failed    { -fx-text-fill: #c0392b; }
-.status-label:cancelled { -fx-text-fill: #7f8c8d; }
-
-/* ---------- Status dot in sidebar list cells ----------------- */
-
-.status-dot {
-    -fx-font-size: 16px;
-    -fx-padding: 0 6 0 0;  /* small gap between dot and name */
-}
-
-.status-dot:idle      { -fx-text-fill: #9e9e9e; }
-.status-dot:running   { -fx-text-fill: #f39c12; }
-.status-dot:completed { -fx-text-fill: #27ae60; }
-.status-dot:failed    { -fx-text-fill: #c0392b; }
-.status-dot:cancelled { -fx-text-fill: #7f8c8d; }
-
-/* ---------- Cancel button ------------------------------------ */
-
-.cancel-button {
-    -fx-font-size: 14px;
-    -fx-padding: 8 20 8 20;
-    -fx-text-fill: #c0392b;
-    -fx-background-color: #ecf0f1;
-    -fx-border-color: #bdc3c7;
-    -fx-border-width: 1;
-    -fx-border-radius: 3;
+    -fx-font-size: 12px;
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-padding: 3 10 3 10;
     -fx-background-radius: 3;
 }
+.status-label:idle      { -fx-text-fill: #8B949E;
+    -fx-background-color: rgba(139, 148, 158, 0.12); }
+.status-label:running   { -fx-text-fill: #00C7FF;
+    -fx-background-color: rgba(0, 199, 255, 0.12); }
+.status-label:completed { -fx-text-fill: #3FB950;
+    -fx-background-color: rgba(63, 185, 80, 0.12); }
+.status-label:failed    { -fx-text-fill: #F85149;
+    -fx-background-color: rgba(248, 81, 73, 0.12); }
+.status-label:cancelled { -fx-text-fill: #E5A00D;
+    -fx-background-color: rgba(229, 160, 13, 0.12); }
 
-.cancel-button:hover {
-    -fx-background-color: #dfe4e6;
+/* ── Agent list (sidebar) ────────────────────────────────── */
+
+.agent-list {
+    -fx-background-color: transparent;
+    -fx-control-inner-background: transparent;
+    -fx-border-color: transparent;
+}
+.agent-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 10 8 10 8;
+    -fx-border-color: transparent transparent -jarvis-border transparent;
+    -fx-border-width: 1;
+}
+.agent-list .list-cell:hover {
+    -fx-background-color: -jarvis-bg-hover;
+    -fx-cursor: hand;
+}
+.agent-list .list-cell:selected,
+.agent-list .list-cell:selected:focused {
+    -fx-background-color: rgba(0, 199, 255, 0.1);
 }
 
-.cancel-button:pressed {
-    -fx-background-color: #ced4d6;
-}
-
-/* ---------- Log console (bottom panel) ----------------------- */
+/* ── Log console ─────────────────────────────────────────── */
 
 .log-console {
-    -fx-background-color: #1e1e1e;
-    -fx-border-color: #3c3c3c;
-    -fx-border-width: 1 0 0 0;  /* top border only — separates from main area */
+    -fx-background-color: #010409;
+    -fx-border-color: -jarvis-border;
+    -fx-border-width: 1 0 0 0;
 }
-
 .log-title {
-    -fx-text-fill: #cccccc;
-    -fx-font-size: 12px;
+    -fx-text-fill: -jarvis-muted;
+    -fx-font-size: 10px;
     -fx-font-weight: bold;
-    -fx-padding: 0 0 4 0;
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-padding: 0 0 6 0;
 }
-
 .log-list {
     -fx-background-color: transparent;
-    -fx-control-inner-background: #1e1e1e;
-    -fx-font-family: "Consolas", "Menlo", monospace;
+    -fx-control-inner-background: #010409;
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 12px;
+}
+.log-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 1 6 1 6;
+}
+.log-list .list-cell:selected,
+.log-list .list-cell:filled:selected,
+.log-list .list-cell:filled:selected:focused {
+    -fx-background-color: rgba(255, 255, 255, 0.04);
+}
+
+/* ── History toolbar ─────────────────────────────────────── */
+
+.history-toolbar {
+    -fx-background-color: -jarvis-bg-panel;
+    -fx-border-color: transparent transparent -jarvis-border transparent;
+    -fx-border-width: 1;
+    -fx-padding: 10 16 10 16;
+}
+.history-label {
+    -fx-text-fill: -jarvis-muted;
     -fx-font-size: 12px;
 }
 
-.log-list .list-cell {
+/* ── Table view ──────────────────────────────────────────── */
+
+.table-view {
+    -fx-background-color: -jarvis-bg-deep;
+    -fx-control-inner-background: -jarvis-bg-deep;
+    -fx-border-color: -jarvis-border;
+}
+.table-view .column-header-background {
+    -fx-background-color: -jarvis-bg-panel;
+}
+.table-view .column-header,
+.table-view .filler {
+    -fx-background-color: -jarvis-bg-panel;
+    -fx-border-color: transparent -jarvis-border transparent transparent;
+    -fx-size: 36;
+}
+.table-view .column-header .label {
+    -fx-text-fill: -jarvis-muted;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-alignment: CENTER_LEFT;
+}
+.table-row-cell {
+    -fx-background-color: -jarvis-bg-deep;
+    -fx-text-fill: -jarvis-text;
+    -fx-border-color: transparent transparent -jarvis-border transparent;
+    -fx-border-width: 1;
+    -fx-cell-size: 36px;
+}
+.table-row-cell:odd      { -fx-background-color: -jarvis-bg-panel; }
+.table-row-cell:selected { -fx-background-color: rgba(0, 199, 255, 0.1); }
+.table-row-cell:hover    { -fx-background-color: -jarvis-bg-hover; }
+.table-cell {
+    -fx-text-fill: -jarvis-text;
+    -fx-border-color: transparent;
+    -fx-font-size: 12px;
+}
+
+/* ── ComboBox ────────────────────────────────────────────── */
+
+.combo-box {
+    -fx-background-color: -jarvis-bg-panel;
+    -fx-border-color: -jarvis-border;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+}
+.combo-box .list-cell  { -fx-background-color: transparent; -fx-text-fill: -jarvis-text; }
+.combo-box .arrow-button { -fx-background-color: transparent; }
+.combo-box .arrow        { -fx-background-color: -jarvis-muted; }
+.combo-box-popup .list-view {
+    -fx-background-color: -jarvis-bg-panel;
+    -fx-border-color: -jarvis-border;
+}
+.combo-box-popup .list-cell {
+    -fx-background-color: -jarvis-bg-panel;
+    -fx-text-fill: -jarvis-text;
+}
+.combo-box-popup .list-cell:hover { -fx-background-color: -jarvis-bg-hover; }
+
+/* ── Scroll bars (minimal, dark) ─────────────────────────── */
+
+.scroll-bar { -fx-background-color: transparent; }
+.scroll-bar .thumb {
+    -fx-background-color: -jarvis-border;
+    -fx-background-radius: 3;
+}
+.scroll-bar .thumb:hover { -fx-background-color: -jarvis-muted; }
+.scroll-bar .track,
+.scroll-bar .track-background { -fx-background-color: transparent; }
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
     -fx-background-color: transparent;
-    -fx-text-fill: #d0d0d0;
-    -fx-padding: 2 6 2 6;
+    -fx-opacity: 0;
+    -fx-padding: 0;
 }
-
-.log-list .list-cell:filled:hover {
-    -fx-background-color: #2a2a2a;
-}
-
-.log-list .list-cell:filled:selected {
-    -fx-background-color: #094771;
-    -fx-text-fill: white;
-}
+.scroll-bar .increment-arrow,
+.scroll-bar .decrement-arrow { -fx-shape: ""; -fx-padding: 0; }

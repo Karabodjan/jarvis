@@ -11,29 +11,33 @@
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="fr.karabodjan.jarvis.view.HistoryController">
+            fx:controller="fr.karabodjan.jarvis.view.HistoryController"
+            stylesheets="@style.css">
 
     <top>
-        <HBox spacing="10" alignment="CENTER_LEFT">
-            <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
-            <Label text="Agente:"/>
+        <HBox spacing="10" alignment="CENTER_LEFT" styleClass="history-toolbar">
+            <Label text="Agent:" styleClass="history-label"/>
             <ComboBox fx:id="agentFilter" prefWidth="180"/>
-            <Label text="Status:"/>
+            <Label text="Status:" styleClass="history-label"/>
             <ComboBox fx:id="statusFilter" prefWidth="140"/>
-            <Button fx:id="refreshButton" text="↻ Refresh"/>
-            <Button fx:id="exportButton" text="💾 Exportar CSV" onAction="#onExportClicked"/>
+            <Button fx:id="refreshButton" text="↻ Refresh"
+                    styleClass="export-button"/>
+            <Button fx:id="exportButton" text="💾 Export CSV"
+                    onAction="#onExportClicked"
+                    styleClass="export-button"/>
         </HBox>
     </top>
 
     <center>
         <TableView fx:id="historyTable">
             <columns>
-                <TableColumn fx:id="agentColumn" text="Agente" prefWidth="160"/>
-                <TableColumn fx:id="statusColumn" text="Status" prefWidth="110"/>
-                <TableColumn fx:id="startedAtColumn" text="Início" prefWidth="170"/>
-                <TableColumn fx:id="durationColumn" text="Duração" prefWidth="90"/>
-                <TableColumn fx:id="prUrlColumn" text="Pull Request" prefWidth="280"/>
+                <TableColumn fx:id="agentColumn"     text="AGENT"        prefWidth="160"/>
+                <TableColumn fx:id="statusColumn"    text="STATUS"       prefWidth="110"/>
+                <TableColumn fx:id="startedAtColumn" text="STARTED"      prefWidth="170"/>
+                <TableColumn fx:id="durationColumn"  text="DURATION"     prefWidth="90"/>
+                <TableColumn fx:id="prUrlColumn"     text="PULL REQUEST" prefWidth="280"/>
             </columns>
         </TableView>
     </center>
+
 </BorderPane>
