@@ -1,6 +1,7 @@
 package fr.karabodjan.jarvis.viewmodel;
 
 import fr.karabodjan.jarvis.integration.DiscordNotifier;
+import fr.karabodjan.jarvis.integration.GitHubService;
 import fr.karabodjan.jarvis.integration.VoiceService;
 import fr.karabodjan.jarvis.model.Agent;
 import fr.karabodjan.jarvis.model.run.AgentResult;
@@ -10,6 +11,8 @@ import fr.karabodjan.jarvis.repository.JarvisStorageException;
 import fr.karabodjan.jarvis.repository.RunHistoryRepository;
 import fr.karabodjan.jarvis.service.AgentTask;
 import fr.karabodjan.jarvis.service.IAgentService;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
@@ -36,6 +39,10 @@ public final class AgentListViewModel {
     private final RunHistoryRepository runHistoryRepository;
     private final VoiceService voiceService;
     private final DiscordNotifier discordNotifier;
+    private final GitHubService gitHubService;              // (1) novo campo
+
+    private final BooleanProperty autoMergeEnabled =
+            new SimpleBooleanProperty(false);
 
     private final ObservableList<AgentRunViewModel> agents =
             FXCollections.observableArrayList();
@@ -55,11 +62,17 @@ public final class AgentListViewModel {
     public AgentListViewModel(IAgentService agentService,
                               RunHistoryRepository runHistoryRepository,
                               VoiceService voiceService,
-                              DiscordNotifier discordNotifier) {
+                              DiscordNotifier discordNotifier,
+                              GitHubService gitHubService) {
         this.agentService         = Objects.requireNonNull(agentService);
         this.runHistoryRepository = Objects.requireNonNull(runHistoryRepository);
         this.voiceService         = Objects.requireNonNull(voiceService);
         this.discordNotifier      = Objects.requireNonNull(discordNotifier);
+        this.gitHubService        = Objects.requireNonNull(gitHubService);
+    }
+
+    public BooleanProperty autoMergeEnabledProperty() {
+        return autoMergeEnabled;
     }
 
     // --- loading --------------------------------------------------------
@@ -100,7 +113,7 @@ public final class AgentListViewModel {
                 runVm.setProgress(newP.doubleValue()));
 
         task.setOnSucceeded(event -> handleSucceeded(runVm, task));
-        task.setOnFailed(event   -> handleFailed(runVm, task, launchedAt));
+        task.setOnFailed(event    -> handleFailed(runVm, task, launchedAt));
         task.setOnCancelled(event -> handleCancelled(runVm, launchedAt));
 
         runningTasks.put(agent.getId(), task);
@@ -132,10 +145,46 @@ public final class AgentListViewModel {
 
         voiceService.speak("Mission accomplished. Pull Request submitted.");
 
-        // (1) Capturar o PersistedRun numa variável para passar a ambos
         PersistedRun completedRun = toPersistedRun(runVm.getAgent(), result);
         persistAsync(completedRun);
         discordNotifier.send(completedRun);
+
+        if (autoMergeEnabled.get() && result.prUrl() != null) {
+            appendLog(runVm.getAgent(), "🔀 Auto-merge enabled — attempting merge...");
+
+            gitHubService.mergePullRequest(result.prUrl(), (success, message) -> {
+                if (success) {
+                    appendLog(runVm.getAgent(), "✅ Merged — " + message);
+                    voiceService.speak("Auto-merge complete. Repository updated.");
+
+                    PersistedRun mergedRun = new PersistedRun(
+                            completedRun.runId(),
+                            completedRun.agentId(),
+                            completedRun.agentName(),
+                            completedRun.status(),
+                            completedRun.startedAt(),
+                            completedRun.completedAt(),
+                            completedRun.prUrl(),
+                            completedRun.errorMessage(),
+                            true
+                    );
+                    discordNotifier.send(mergedRun);
+
+                    persistExecutor.submit(() -> {
+                        try {
+                            runHistoryRepository.updateMerged(completedRun.runId());
+                        } catch (JarvisStorageException e) {
+                            System.err.println("[JARVIS] updateMerged failed: "
+                                    + e.getMessage());
+                        }
+                    });
+
+                } else {
+                    appendLog(runVm.getAgent(), "⚠ Merge failed — " + message);
+                    voiceService.speak("Warning. Auto-merge failed. Review logs.");
+                }
+            });
+        }
     }
 
     private void handleFailed(AgentRunViewModel runVm, AgentTask task, Instant startedAt) {
@@ -150,7 +199,6 @@ public final class AgentListViewModel {
         appendLog(runVm.getAgent(), "✖ Failed — " + errorMessage);
         voiceService.speak("Warning. Agent failed. Review logs.");
 
-        // (2) Mesmo padrão — capturar numa variável, passar a ambos
         PersistedRun failedRun = new PersistedRun(
                 UUID.randomUUID().toString(),
                 runVm.getAgent().getId(),
@@ -174,7 +222,6 @@ public final class AgentListViewModel {
 
         appendLog(runVm.getAgent(), "⏹ Cancelled by user");
 
-        // (3) Cancelamento — persiste mas não notifica Discord
         persistAsync(new PersistedRun(
                 UUID.randomUUID().toString(),
                 runVm.getAgent().getId(),
