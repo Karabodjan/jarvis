@@ -64,8 +64,7 @@ public final class MockAgentTask extends AgentTask {
     }
 
     private static String buildFakePrUrl(Agent agent) {
-        // Deterministic fake number based on current time, capped to something PR-like.
-        long fakePrNumber = (System.currentTimeMillis() / 1000) % 1000;
-        return agent.getRepoUrl() + "/pull/" + fakePrNumber;
+        // URL real para testar o auto-merge com o jarvis-test-repo-1
+        return "https://github.com/Karabodjan/jarvis-test-repo-1/pull/1";
     }
 }

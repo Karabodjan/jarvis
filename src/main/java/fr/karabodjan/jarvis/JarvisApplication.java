@@ -1,5 +1,7 @@
 package fr.karabodjan.jarvis;
 
+import fr.karabodjan.jarvis.integration.DiscordNotifier;
+import fr.karabodjan.jarvis.integration.GitHubService;
 import fr.karabodjan.jarvis.integration.VoiceService;
 import fr.karabodjan.jarvis.model.Agent;
 import fr.karabodjan.jarvis.repository.RunHistoryRepository;
@@ -17,7 +19,6 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import fr.karabodjan.jarvis.integration.DiscordNotifier;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -28,6 +29,7 @@ public class JarvisApplication extends Application {
 
     private VoiceService voiceService;
     private DiscordNotifier discordNotifier;
+    private GitHubService gitHubService;
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -37,11 +39,13 @@ public class JarvisApplication extends Application {
 
         IAgentService agentService = new MockAgentService();
         RunHistoryRepository runHistoryRepository = new SqliteRunRepository("jarvis.db");
-        voiceService = new VoiceService();
-        discordNotifier = new DiscordNotifier(config.getDiscordWebhookUrl());
+        voiceService     = new VoiceService();
+        discordNotifier  = new DiscordNotifier(config.getDiscordWebhookUrl());
+        gitHubService    = new GitHubService(config.getGithubToken());
 
-        AgentListViewModel listViewModel =
-                new AgentListViewModel(agentService, runHistoryRepository, voiceService, discordNotifier);
+        AgentListViewModel listViewModel = new AgentListViewModel(
+                agentService, runHistoryRepository,
+                voiceService, discordNotifier, gitHubService);
         listViewModel.setAgents(agents);
 
         RunHistoryViewModel runHistoryViewModel =
@@ -55,6 +59,9 @@ public class JarvisApplication extends Application {
         controller.setRunHistoryViewModel(runHistoryViewModel);
         controller.init();
 
+        listViewModel.autoMergeEnabledProperty()
+                .bind(controller.autoMergeEnabledProperty());
+
         stage.setTitle("J.A.R.V.I.S. — Control Tower");
         stage.setScene(scene);
         stage.show();
@@ -62,8 +69,9 @@ public class JarvisApplication extends Application {
 
     @Override
     public void stop() {
-        if (voiceService != null)       voiceService.shutdown();
-        if (discordNotifier != null)    discordNotifier.shutdown();
+        if (voiceService    != null) voiceService.shutdown();
+        if (discordNotifier != null) discordNotifier.shutdown();
+        if (gitHubService   != null) gitHubService.shutdown();  // (5) shutdown novo
     }
 
     private List<Agent> loadAgentsSafely() {

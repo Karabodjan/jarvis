@@ -68,5 +68,5 @@ dependency-reduced-pom.xml
 .mvn/timing.properties
 .mvn/wrapper/maven-wrapper.properties
 
-
+### JARVIS specific ###
 src/main/resources/config.json
