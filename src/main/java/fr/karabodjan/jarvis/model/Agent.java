@@ -4,9 +4,9 @@ import java.time.Instant;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Immutable definition of an agent loaded from agents.json.
- * Represents the static configuration of an agent — never its runtime state.
- * Runtime status (IDLE, RUNNING, COMPLETED, ...) is managed by the ViewModel.
+ * Ce fichier représente la configuration d'un agent d'IA.
+ * L'agent a récupéré le fichier agents.json.
+ * Ne stocke pas les états (IDLE, RUNNING, COMPLETED)
  */
 public final class Agent {
 
@@ -16,6 +16,7 @@ public final class Agent {
     private final String taskType;
     private final Instant createdAt;
 
+    // Desseriazation
     public Agent(
             @JsonProperty("id") String id,
             @JsonProperty("name") String name,
@@ -28,6 +29,7 @@ public final class Agent {
         this.createdAt = Instant.now();
     }
 
+    //Getters
     public String getId() {
         return id;
     }
@@ -48,6 +50,7 @@ public final class Agent {
         return createdAt;
     }
 
+    // Définit la manière dont l'objet sera affiché à l'impression.
     @Override
     public String toString() {
         return "Agent{" +
