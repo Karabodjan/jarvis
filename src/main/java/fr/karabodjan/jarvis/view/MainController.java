@@ -4,6 +4,8 @@ import fr.karabodjan.jarvis.model.run.AgentRunStatus;
 import fr.karabodjan.jarvis.viewmodel.AgentListViewModel;
 import fr.karabodjan.jarvis.viewmodel.AgentRunViewModel;
 import fr.karabodjan.jarvis.viewmodel.RunHistoryViewModel;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.css.PseudoClass;
 import javafx.fxml.FXML;
@@ -45,7 +47,6 @@ public class MainController {
     }
 
     @FXML private ListView<AgentRunViewModel> agentListView;
-
     @FXML private Label detailTitleLabel;
     @FXML private Label detailPlaceholderLabel;
     @FXML private VBox detailFieldsBox;
@@ -58,13 +59,14 @@ public class MainController {
     @FXML private Button launchButton;
     @FXML private Button cancelButton;
     @FXML private Button historyButton;
+    @FXML private Button autoMergeToggle;
     @FXML private ListView<String> logListView;
+
+    private final BooleanProperty autoMergeEnabled = new SimpleBooleanProperty(false);
 
     private AgentListViewModel listViewModel;
     private RunHistoryViewModel runHistoryViewModel;
-
     private AgentRunViewModel boundRun;
-
     private Stage historyStage;
 
     private final ChangeListener<AgentRunStatus> statusListener =
@@ -74,11 +76,16 @@ public class MainController {
             };
 
     public void setViewModel(AgentListViewModel listViewModel) {
-        this.listViewModel = Objects.requireNonNull(listViewModel, "listViewModel must not be null");
+        this.listViewModel = Objects.requireNonNull(listViewModel);
     }
 
     public void setRunHistoryViewModel(RunHistoryViewModel runHistoryViewModel) {
-        this.runHistoryViewModel = Objects.requireNonNull(runHistoryViewModel, "runHistoryViewModel must not be null");
+        this.runHistoryViewModel = Objects.requireNonNull(runHistoryViewModel);
+    }
+
+    // (3) O composition root chama este método para ler o estado do toggle
+    public BooleanProperty autoMergeEnabledProperty() {
+        return autoMergeEnabled;
     }
 
     public void init() {
@@ -87,12 +94,10 @@ public class MainController {
 
         agentListView.setItems(listViewModel.getAgents());
         agentListView.setCellFactory(listView -> new AgentRunCell());
-
         agentListView.getSelectionModel().selectedItemProperty().addListener(
                 (observable, oldRun, newRun) -> bindToRun(newRun)
         );
 
-        // Bind the log console to the global log feed.
         logListView.setItems(listViewModel.getLogs());
         listViewModel.getLogs().addListener(
                 (javafx.collections.ListChangeListener<String>) change ->
@@ -172,6 +177,21 @@ public class MainController {
     }
 
     @FXML
+    private void onAutoMergeToggled() {
+        boolean nowEnabled = !autoMergeEnabled.get();
+        autoMergeEnabled.set(nowEnabled);
+        if (nowEnabled) {
+            autoMergeToggle.setText("ON");
+            autoMergeToggle.setStyle(
+                    "-fx-background-color: #2d7a2d; -fx-text-fill: white; -fx-padding: 6 14 6 14;");
+        } else {
+            autoMergeToggle.setText("OFF");
+            autoMergeToggle.setStyle(
+                    "-fx-background-color: #555; -fx-text-fill: white; -fx-padding: 6 14 6 14;");
+        }
+    }
+
+    @FXML
     private void onHistoryClicked() {
         try {
             if (historyStage == null) {
@@ -179,11 +199,9 @@ public class MainController {
                         getClass().getResource("/fr/karabodjan/jarvis/history-view.fxml")
                 );
                 Scene scene = new Scene(loader.load(), 900, 500);
-
                 HistoryController historyController = loader.getController();
                 historyController.setViewModel(runHistoryViewModel);
                 historyController.init();
-
                 historyStage = new Stage();
                 historyStage.setTitle("J.A.R.V.I.S. — Run History");
                 historyStage.setScene(scene);
@@ -196,14 +214,13 @@ public class MainController {
         }
     }
 
-    // --- Sidebar cell with status dot ----------------------------------
+    // --- Sidebar cell --------------------------------------------------
 
     private static final class AgentRunCell extends ListCell<AgentRunViewModel> {
 
         private final Label dot = new Label("●");
         private final Label name = new Label();
         private final HBox layout = new HBox(dot, name);
-
         private AgentRunViewModel observed;
 
         private final ChangeListener<AgentRunStatus> dotListener =
@@ -217,23 +234,19 @@ public class MainController {
         @Override
         protected void updateItem(AgentRunViewModel runVm, boolean empty) {
             super.updateItem(runVm, empty);
-
             if (observed != null) {
                 observed.statusProperty().removeListener(dotListener);
                 observed = null;
             }
-
             if (empty || runVm == null) {
                 setText(null);
                 setGraphic(null);
                 return;
             }
-
             name.setText(runVm.getAgent().getName());
             applyStatusPseudoClass(dot, runVm.getStatus());
             runVm.statusProperty().addListener(dotListener);
             observed = runVm;
-
             setText(null);
             setGraphic(layout);
         }
