@@ -30,6 +30,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
+// Reçoit les événements des boutons et met à jour les composants visuels
 public class MainController {
 
     private static final DateTimeFormatter CREATED_AT_FORMAT =
@@ -37,7 +38,7 @@ public class MainController {
                     .withZone(ZoneId.systemDefault());
 
     private static final Map<AgentRunStatus, PseudoClass> PSEUDO_BY_STATUS = buildPseudoMap();
-
+    //Pseudo-classes do CSS (como o :hover ou :active
     private static Map<AgentRunStatus, PseudoClass> buildPseudoMap() {
         EnumMap<AgentRunStatus, PseudoClass> map = new EnumMap<>(AgentRunStatus.class);
         for (AgentRunStatus s : AgentRunStatus.values()) {
